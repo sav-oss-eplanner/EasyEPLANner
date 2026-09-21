@@ -453,7 +453,7 @@ namespace IO.View
 
                 if (EasyEPlanner.ProjectManager.GetInstance().IsStandalone)
                 {
-                    EasyEPlanner.ProjectManager.GetInstance().SaveTechObjectsFromContext(false);
+                    EasyEPlanner.ProjectManager.SaveTechObjectsFromContext(false);
                 }
                 else
                 {
@@ -672,7 +672,7 @@ namespace IO.View
 
                 if (EasyEPlanner.ProjectManager.GetInstance().IsStandalone)
                 {
-                    EasyEPlanner.ProjectManager.GetInstance().SaveTechObjectsFromContext(false);
+                    EasyEPlanner.ProjectManager.SaveTechObjectsFromContext(false);
                 }
                 else
                 {
@@ -710,7 +710,7 @@ namespace IO.View
 
                 if (EasyEPlanner.ProjectManager.GetInstance().IsStandalone)
                 {
-                    EasyEPlanner.ProjectManager.GetInstance().SaveTechObjectsFromContext(false);
+                    EasyEPlanner.ProjectManager.SaveTechObjectsFromContext(false);
                 }
                 else
                 {
@@ -742,7 +742,7 @@ namespace IO.View
 
                 if (EasyEPlanner.ProjectManager.GetInstance().IsStandalone)
                 {
-                    EasyEPlanner.ProjectManager.GetInstance().SaveTechObjectsFromContext(false);
+                    EasyEPlanner.ProjectManager.SaveTechObjectsFromContext(false);
                 }
                 else
                 {
@@ -1748,7 +1748,7 @@ namespace IO.View
         {
             if (EasyEPlanner.ProjectManager.GetInstance().IsStandalone)
             {
-                EasyEPlanner.ProjectManager.GetInstance().SaveTechObjectsFromContext(false);
+                EasyEPlanner.ProjectManager.SaveTechObjectsFromContext(false);
             }
             else
             {

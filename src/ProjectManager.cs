@@ -448,7 +448,7 @@ namespace EasyEPlanner
         /// <summary>
         /// Сохранить объекты, ограничения и main.io.lua текущего контекста.
         /// </summary>
-        public void SaveTechObjectsFromContext(bool silentMode = true)
+        public static void SaveTechObjectsFromContext(bool silentMode = true)
         {
             var context = ProjectContextHolder.Current;
             if (context == null ||

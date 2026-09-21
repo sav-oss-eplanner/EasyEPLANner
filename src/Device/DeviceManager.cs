@@ -501,15 +501,17 @@ namespace EplanDevice
 
         /// <summary>
         /// Добавить устройство без EPLAN Function (загрузка из main.io.lua).
+        /// Параметры (par, rt_par) и свойства IOL-Conf загружаются отдельно
+        /// после создания устройства, поэтому здесь всегда пустые строки.
         /// </summary>
         public IODevice AddDeviceFromLua(string devName, string description,
-            string subType, string paramStr, string rtParamStr, string propStr,
-            int dLocation, out string errStr, string articleName,
-            string iolConfProperties)
+            string subType, string props, string articleName,
+            out string errStr)
         {
-            return AddDevice(devName, description, subType, paramStr,
-                rtParamStr, propStr, dLocation, out errStr, articleName,
-                iolConfProperties);
+            const int dLocation = 1;
+            return AddDevice(devName, description, subType, string.Empty,
+                string.Empty, props, dLocation, out errStr, articleName,
+                string.Empty);
         }
 
         /// <summary>

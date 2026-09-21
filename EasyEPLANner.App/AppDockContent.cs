@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Windows.Forms;
 using WeifenLuo.WinFormsUI.Docking;
 
@@ -6,6 +7,7 @@ namespace EasyEPlanner.App
     /// <summary>
     /// Документ DockPanelSuite с панелью-хостом для встраиваемых view.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     internal sealed class AppDockContent : DockContent
     {
         public AppDockContent(string title)

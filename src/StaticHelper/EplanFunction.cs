@@ -1,6 +1,7 @@
 ﻿using EasyEPlanner.Extensions;
 using Eplan.EplApi.Base;
 using Eplan.EplApi.DataModel;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -178,12 +179,20 @@ namespace StaticHelper
                         .ToString(ISOCode.Language.L_ru_RU);
                 }
 
-                description = Regex.Replace(description ?? string.Empty,
-                    "([\'\"])", string.Empty);
+                description = DescriptionQuotesRegex.Replace(
+                    description ?? string.Empty, string.Empty);
 
                 return description;
             }
             set => function.Properties.FUNC_COMMENT = value;
         }
+
+        /// <summary>
+        /// Регулярное выражение для удаления кавычек из описания
+        /// (с таймаутом на случай проблемного входа).
+        /// </summary>
+        private static readonly Regex DescriptionQuotesRegex = new Regex(
+            "([\'\"])", RegexOptions.Compiled,
+            TimeSpan.FromMilliseconds(200));
     }
 }

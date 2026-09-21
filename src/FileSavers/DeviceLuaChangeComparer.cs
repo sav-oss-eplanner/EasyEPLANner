@@ -163,8 +163,14 @@ namespace EasyEPlanner
 
             var all = deviceValues.ToList();
             var nonNull = all.Where(p => p.Value != null).ToList();
-            var target = ordered.Count == all.Count ? all :
-                ordered.Count == nonNull.Count ? nonNull : all;
+
+            // При сохранении пишутся только непустые; если пользователь
+            // задал бывшие null — число значений = числу всех полей.
+            var target = all;
+            if (ordered.Count != all.Count)
+            {
+                target = ordered.Count == nonNull.Count ? nonNull : all;
+            }
 
             int count = Math.Min(ordered.Count, target.Count);
             for (int i = 0; i < count; i++)

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Windows.Forms;
 using EasyEPlanner;
@@ -31,9 +32,9 @@ namespace EasyEPlanner.App
         }
     }
 
+    [ExcludeFromCodeCoverage]
     public class MainForm : Form
     {
-        private readonly MenuStrip menuStrip;
         private readonly DockPanel dockPanel;
         private readonly StatusStrip statusStrip;
         private readonly ToolStripStatusLabel statusLabel;
@@ -50,7 +51,7 @@ namespace EasyEPlanner.App
             Height = 800;
             StartPosition = FormStartPosition.CenterScreen;
 
-            menuStrip = new MenuStrip();
+            var menuStrip = new MenuStrip();
             var fileMenu = new ToolStripMenuItem("Файл");
             fileMenu.DropDownItems.Add("Открыть папку проекта...", null,
                 (_, __) => OpenProjectFolder());
@@ -98,7 +99,7 @@ namespace EasyEPlanner.App
             BootstrapManagers();
         }
 
-        private void BootstrapManagers()
+        private static void BootstrapManagers()
         {
             try
             {
@@ -236,7 +237,7 @@ namespace EasyEPlanner.App
 
             try
             {
-                ProjectManager.GetInstance().SaveTechObjectsFromContext(false);
+                ProjectManager.SaveTechObjectsFromContext(false);
                 statusLabel.Text =
                     $"Сохранено: {ProjectContextHolder.Current.ProjectName}";
             }
@@ -289,7 +290,7 @@ namespace EasyEPlanner.App
             bindingDoc.ShowOrActivate(dockPanel);
         }
 
-        private AppDockContent EnsureDockDoc(ref AppDockContent doc,
+        private static AppDockContent EnsureDockDoc(ref AppDockContent doc,
             string title)
         {
             if (doc == null || doc.IsDisposed)

@@ -500,7 +500,7 @@ namespace EasyEPlanner.Binding.View
         {
             if (ProjectManager.GetInstance().IsStandalone)
             {
-                ProjectManager.GetInstance().SaveTechObjectsFromContext(false);
+                ProjectManager.SaveTechObjectsFromContext(false);
             }
             else
             {

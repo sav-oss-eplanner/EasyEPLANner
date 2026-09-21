@@ -258,11 +258,11 @@ namespace Editor
         {
             if (PI.IsWindowVisible(wndEditVisiblePtr) == true)
             {
-                editIsShown = true;
+                EditIsShown = true;
             }
             else
             {
-                editIsShown = false;
+                EditIsShown = false;
             }
         }
 
@@ -275,7 +275,7 @@ namespace Editor
                             Environment.SpecialFolder.ApplicationData);
 
             IniFile ini = new IniFile(path + @"\Eplan\eplan.cfg");
-            if (editIsShown)
+            if (EditIsShown)
             {
                 ini.WriteString("main", "show_obj_window", "true");
             }
@@ -453,7 +453,7 @@ namespace Editor
             System.Threading.Thread.Sleep(1);
 
             IsShown = false;
-            editIsShown = false;
+            EditIsShown = false;
             wasInit = false;
         }
 
@@ -464,7 +464,7 @@ namespace Editor
 
             // AFX_WM_ON_PRESS_CLOSE_BUTTON - зарегистрированное сообщение, вызываемое при закрытии дочернего окна в EPLAN.
             // Сообщение msg содержит lParam, который указывает CDockablePane на закрываемое окно.
-            // Но как определить по нему окно...¯\_(ツ)_/¯.
+            // Но как определить по нему окно...?\_(?)_/?.
             // Поэтому определяем размеры окна и позицию курсора мыши, и регистрируем нажатие в правый верхний угол размером ~ 30x30 px.
             if (msg.message == PI.RegisterWindowMessage("AFX_WM_ON_PRESS_CLOSE_BUTTON") && Editable)
             {
@@ -511,7 +511,7 @@ namespace Editor
             searchBoxTLP.Invalidate();
         }
 
-        public static bool editIsShown = false; //Показано ли окно.
+        public static bool EditIsShown { get; set; } = false; //Показано ли окно.
         public bool IsShown = false; // Костыль, без этого не работает IsShown()
         public static IntPtr wndEditVisiblePtr; // Дескриптор редактора.
 
@@ -530,7 +530,7 @@ namespace Editor
 
             StandaloneHost = true;
             wasShown = true;
-            editIsShown = true;
+            EditIsShown = true;
             IsShown = true;
             cancelChanges = false;
 
@@ -574,7 +574,7 @@ namespace Editor
             const int wndWmCommand = 35381;
             string windowName = "Комментарий";
 
-            if (editIsShown == true && IsShown == true)
+            if (EditIsShown == true && IsShown == true)
             {
                 StaticHelper.GUIHelper.ShowHiddenWindow(currentProcess,
                     wndEditVisiblePtr, wndWmCommand);
@@ -605,7 +605,7 @@ namespace Editor
                 // изменений при закрытии и отключения хука).
                 SetUpHook();
 
-                editIsShown = true;
+                EditIsShown = true;
                 IsShown = true;
                 cancelChanges = false;
 
@@ -1391,8 +1391,7 @@ namespace Editor
             bool saveDescrSilentMode = false;
             if (StandaloneHost)
             {
-                ProjectManager.GetInstance()
-                    .SaveTechObjectsFromContext(saveDescrSilentMode);
+                ProjectManager.SaveTechObjectsFromContext(saveDescrSilentMode);
             }
             else
             {

@@ -100,9 +100,9 @@ namespace EplanDevice
         /// <summary>
         /// Установить описание устройства в памяти.
         /// </summary>
-        public void SetDescription(string value)
+        public void SetDescription(string description)
         {
-            description = value ?? string.Empty;
+            this.description = description ?? string.Empty;
         }
 
         public virtual string GetConnectionType()

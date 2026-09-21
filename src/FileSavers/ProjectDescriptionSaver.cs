@@ -189,7 +189,7 @@ namespace EasyEPlanner
                 Directory.CreateDirectory(par.path);
             }
 
-            string pathToFile = par.path + @"\" + mainIOFileName;
+            string pathToFile = Path.Combine(par.path, mainIOFileName);
             if (!File.Exists(pathToFile) &&
                 deviceManager.Devices.Count == 0 &&
                 IOManager.IONodes.Count == 0)

@@ -436,8 +436,7 @@ namespace EasyEPlanner
                     deviceTable["prop"] as LuaTable);
 
                 var added = DeviceManager.GetInstance().AddDeviceFromLua(
-                    name, descr, subtype, string.Empty, string.Empty, props,
-                    1, out _, article, string.Empty);
+                    name, descr, subtype, props, article, out _);
 
                 if (added is not IODevice ioDevice)
                     continue;
@@ -562,10 +561,12 @@ namespace EasyEPlanner
 
             // При сохранении пишутся только непустые; если пользователь
             // задал бывшие null — число значений = числу всех ключей.
-            IList<IODevice.Parameter> targetKeys =
-                values.Count == allKeys.Count ? allKeys :
-                values.Count == nonNullKeys.Count ? nonNullKeys :
-                allKeys;
+            IList<IODevice.Parameter> targetKeys = allKeys;
+            if (values.Count != allKeys.Count)
+            {
+                targetKeys = values.Count == nonNullKeys.Count ?
+                    nonNullKeys : allKeys;
+            }
 
             int count = Math.Min(values.Count, targetKeys.Count);
             for (int i = 0; i < count; i++)
@@ -597,10 +598,12 @@ namespace EasyEPlanner
                 .Select(p => p.Key)
                 .ToList();
 
-            IList<string> targetKeys =
-                values.Count == allKeys.Count ? allKeys :
-                values.Count == nonNullKeys.Count ? nonNullKeys :
-                allKeys;
+            IList<string> targetKeys = allKeys;
+            if (values.Count != allKeys.Count)
+            {
+                targetKeys = values.Count == nonNullKeys.Count ?
+                    nonNullKeys : allKeys;
+            }
 
             int count = Math.Min(values.Count, targetKeys.Count);
             for (int i = 0; i < count; i++)
@@ -806,13 +809,10 @@ namespace EasyEPlanner
                 deviceType == DeviceType.NONE)
                 return string.Empty;
 
-            foreach (var st in deviceType.SubTypes())
-            {
-                if (st.GetIndex() == subtypeIndex)
-                    return st.ToString();
-            }
-
-            return string.Empty;
+            DeviceSubType? match = deviceType.SubTypes()
+                .Cast<DeviceSubType?>()
+                .FirstOrDefault(st => st.Value.GetIndex() == subtypeIndex);
+            return match?.ToString() ?? string.Empty;
         }
 
         private static int ParseNodeNumber(string name, int fallback)
