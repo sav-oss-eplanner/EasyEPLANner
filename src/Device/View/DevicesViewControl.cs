@@ -361,8 +361,8 @@ namespace EasyEPlanner.Devices.View
         {
             groupingToggleButton.Text = string.Empty;
             groupingToggleButton.ToolTipText = DataContext.GroupingMode is DevicesGroupingMode.ObjectThenType
-                ? "Тип > Объект"
-                : "Объект > Тип";
+                ? "Тип → Объект"
+                : "Объект → Тип";
             groupingToggleButton.Image = DataContext.GroupingMode is DevicesGroupingMode.ObjectThenType
                 ? Properties.Resources.devicesGroupingObjectType
                 : Properties.Resources.devicesGroupingTypeObject;
