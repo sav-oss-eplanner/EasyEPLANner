@@ -256,7 +256,6 @@ jobs:
 
           - Дата сборки: ${{ steps.get-date.outputs.date }}
           - Версия надстройки: ${{ steps.assembly-version.outputs.version }}
-          - [Запуск сборки](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
           ## Список изменений
 
