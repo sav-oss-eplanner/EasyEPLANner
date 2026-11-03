@@ -671,6 +671,8 @@ namespace EasyEplanner.Tests
 
         [TestCase("parameter1", "\t", "\tLuaName = prg.techobject1.PAR_FLOAT.parameter1")]
         [TestCase("parameter2", "\t", "\tLuaName = prg.techobject1.PAR_FLOAT.parameter2")]
+        [TestCase("1", "\t", "\tLuaName = prg.techobject1.PAR_FLOAT.parameter1")]
+        [TestCase("2", "\t", "\tLuaName = prg.techobject1.PAR_FLOAT.parameter2")]
         [TestCase("other", "", "")]
         public void SaveToPrgLua_CheckBaseOperationOwner(string value, string prefix,
             string expected)
@@ -681,6 +683,61 @@ namespace EasyEplanner.Tests
             parameter.SetNewValue(value);
             var res = parameter.SaveToPrgLua(prefix);
             Assert.AreEqual(expected, res);
+        }
+
+        [TestCase("parameter1", "1. parameter1")]
+        [TestCase("1", "1. parameter1")]
+        [TestCase("2", "2. parameter2")]
+        public void DisplayText_OperationParameterByNameOrNumber(
+            string value, string expectedDisplayValue)
+        {
+            var parameter = new ActiveParameter("LuaName", "Name", "",
+                new List<BaseParameter.DisplayObject>
+                {
+                    BaseParameter.DisplayObject.Parameters
+                });
+            SetUpParameterBaseOperationOwner(parameter);
+
+            parameter.SetNewValue(value);
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(expectedDisplayValue, parameter.DisplayText[1]);
+                Assert.AreEqual(value, parameter.Value,
+                    "the value should stay in the existing serialized format");
+                Assert.AreEqual(
+                    $"\tLuaName = prg.techobject1.PAR_FLOAT.{expectedDisplayValue.Split(' ')[1]}",
+                    parameter.SaveToPrgLua("\t"));
+            });
+        }
+
+        [TestCase("parameter1")]
+        [TestCase("1")]
+        public void SetExtraPropertiesAndSaveAsLuaTable_LinkedParameter_KeepLegacyFormat(
+            string value)
+        {
+            var parameter = new ActiveParameter("LuaName", "Name", "",
+                new List<BaseParameter.DisplayObject>
+                {
+                    BaseParameter.DisplayObject.Parameters
+                });
+            SetUpParameterBaseOperationOwner(parameter);
+            var operation = (BaseOperation)parameter.Owner;
+            operation.Properties.Add(parameter);
+            operation.RootProperties.Add(parameter);
+
+            operation.SetExtraProperties(new Dictionary<string, string>
+            {
+                [parameter.LuaName] = value
+            });
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(value, parameter.Value);
+                Assert.AreEqual(
+                    $"props =\n\t{{\n\tLuaName = '{value}',\n\t}},\n",
+                    operation.SaveAsLuaTable(string.Empty));
+            });
         }
 
         private void SetUpParameterBaseOperationOwner(BaseParameter parameter)
