@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -73,7 +74,7 @@ namespace TechObject
 
             stepsMngr = new List<State>();
 
-            foreach (State.StateType state in (State.StateType[])Enum.GetValues(typeof(State.StateType)))
+            foreach (State.StateType state in State.GetOrderedStates())
             {
                 switch (state)
                 {
@@ -100,31 +101,6 @@ namespace TechObject
 
             if (this.baseOperation is ITreeViewItem itviBaseOperation)
                 itviBaseOperation.ValueChanged += (sender) => OnValueChanged(sender);
-
-            SetItems();
-        }
-
-        /// <summary>
-        /// Добавление полей в массив для отображения на дереве.
-        /// </summary>
-        public void SetItems()
-        {
-            bool notEmptyBaseOperation = baseOperation.Name != string.Empty &&
-                baseOperation.LuaName != string.Empty;
-            bool baseOperationHasProperties =
-                baseOperation.Properties.Count > 0;
-
-            var itemsList = new List<ITreeViewItem>();
-            itemsList.AddRange(stepsMngr);
-            itemsList.Add(operPar);
-            itemsList.Add(restrictionMngr);
-
-            if (notEmptyBaseOperation && baseOperationHasProperties)
-            {
-                itemsList.Add(baseOperation as BaseOperation);
-            }
-
-            items = itemsList.ToArray();
         }
 
         public OperationParams GetOperationParams()
@@ -153,7 +129,6 @@ namespace TechObject
             clone.operPar = operPar.Clone(clone);
 
             clone.restrictionMngr = restrictionMngr.Clone();
-            clone.SetItems();
 
             clone.States.ForEach(state => state.ValueChanged += sender => clone.OnValueChanged(sender));
             clone.stepsMngr.ForEach(step => step.ValueChanged += sender => clone.OnValueChanged(sender));
@@ -452,13 +427,18 @@ namespace TechObject
             }
         }
 
-        override public ITreeViewItem[] Items
-        {
-            get
-            {
-                return items;
-            }
-        }
+        override public ITreeViewItem[] Items =>
+        [
+            ..stepsMngr.Where(s => !s.Empty),
+            operPar,
+            restrictionMngr,
+            .. (List<ITreeViewItem>)(NeedBaseOperation ? [baseOperation as BaseOperation] : [])
+        ];
+
+        private bool NeedBaseOperation =>
+            baseOperation.Name != string.Empty &&
+            baseOperation.LuaName != string.Empty &&
+            baseOperation.Properties.Count > 0; 
 
         override public bool SetNewValue(string newName)
         {
@@ -498,7 +478,6 @@ namespace TechObject
 
             // Инициализация базовой операции по имени
             baseOperation.Init(newBaseOperationName, this);
-            SetItems();
 
             if (CloneExtraProperties != null)
                 baseOperation.SetExtraProperties(CloneExtraProperties);
@@ -571,7 +550,6 @@ namespace TechObject
                 int index = stepsMngr.IndexOf(selectedState);
                 stepsMngr.Remove(selectedState);
                 stepsMngr.Insert(index, newState);
-                SetItems();
 
                 newState.AddParent(this);
                 return newState;
@@ -752,6 +730,23 @@ namespace TechObject
             paramsManager.Float.FillWithStubs();
         }
 
+        public override bool IsInsertable => true;
+
+        public override ITreeViewItem Insert(IDialogFactory dialogFactory)
+        {
+            var dialog = dialogFactory.GetStatesCreatorDialog();
+
+            if (dialog.ShowDialog(this) is DialogResult.OK)
+            {
+                return CreateStateStep(dialog.Result);
+            }
+
+            return null;
+        }
+
+        public ITreeViewItem CreateStateStep(State.StateType state)
+            => this[(int)state].Insert();
+
         public static Editor.IEditor TechObjectEditor { get; set; } = Editor.Editor.GetInstance();
 
         private GetN getN;
@@ -759,7 +754,6 @@ namespace TechObject
         private string name;           /// Имя операции.
         private List<State> stepsMngr;/// Список шагов операции для состояний.
         private RestrictionManager restrictionMngr;
-        private ITreeViewItem[] items;
 
         private OperationParams operPar;
 

@@ -319,5 +319,34 @@ namespace EasyEplannerTests.TechObjectTest.ObjectsTreeTest.UniversalObjectTest
                 Assert.AreEqual(DrawInfo.Style.GREEN_GRAY_BOX, draw[4].DrawingStyle);
             });
         }
+
+        [Test]
+        public void IsInsertable()
+        {
+            var mode = new Mode("mode 1", getN => 1, null);
+            Assert.IsTrue(mode.IsInsertable);
+        } 
+
+        [TestCase(DialogResult.OK, State.StateType.STARTING, true)]
+        [TestCase(DialogResult.OK, State.StateType.RUN, true)]
+        [TestCase(DialogResult.Cancel, State.StateType.IDLE, false)]
+        [TestCase(DialogResult.Cancel, State.StateType.PAUSING, false)]
+        public void Insert_Test(DialogResult dialogResult, State.StateType stateType, bool isCreated)
+        {
+            var mode = new Mode("mode 1", getN => 1, null);
+
+            var dialogFactory = Mock.Of<IDialogFactory>(df =>
+                df.GetStatesCreatorDialog() == Mock.Of<IInsertDialog<State.StateType, Mode>>(d =>
+                    d.ShowDialog(It.IsAny<Mode>()) == dialogResult &&
+                    d.Result == stateType));
+
+            Assert.Multiple(() =>
+            {
+                var steps = mode[(int)stateType].Steps.Count;
+                var res = mode.Insert(dialogFactory);
+                Assert.AreEqual(isCreated, res != null);
+                Assert.AreEqual(steps + (isCreated ? 1 : 0), mode[(int)stateType].Steps.Count);
+            });   
+        }
     }
 }

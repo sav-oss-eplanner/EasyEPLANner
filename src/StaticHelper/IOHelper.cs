@@ -1,7 +1,10 @@
 ﻿using Eplan.EplApi.Base;
 using Eplan.EplApi.DataModel;
 using EplanDevice;
+using IO;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
@@ -42,6 +45,14 @@ namespace StaticHelper
         {
             this.projectHelper = projectHelper;
         }
+
+        /// <summary>
+        /// Кэш функции модуля I/O для пневмоострова: полный обход PLCBox
+        /// в EPLAN на больших проектах занимает секунды и вызывается
+        /// несколько раз за одну привязку.
+        /// Создаётся лениво, чтобы конструктор не тянул типы EPLAN в тестах.
+        /// </summary>
+        private Dictionary<string, Function> valveTerminalIoModuleCache;
 
         public Function GetClampFunction(StorableObject selectedObject)
         {
@@ -133,16 +144,14 @@ namespace StaticHelper
         }
 
         /// <summary>
-        /// Поиск функции модуля ввода-вывода к которой привязан пневмоостров
+        /// Поиск функции модуля ввода-вывода, к которому привязан пневмоостров.
+        /// Сначала берётся из уже прочитанной модели проекта, полный обход
+        /// функций EPLAN — только запасной путь.
         /// </summary>
-        /// <param name="clampFunction">Функция клеммы модуля 
-        /// ввода-вывода</param>   
-        /// <returns>Функция модуля ввода-вывода</returns>
+        [ExcludeFromCodeCoverage]
         private Function GetValveTerminalIOModuleFunction(
             Function clampFunction)
         {
-            var IOModuleFunction = new Function();
-
             string valveTerminalName = Regex.Match(clampFunction.Name,
                 DeviceManager.valveTerminalPattern).Value;
             if (string.IsNullOrEmpty(valveTerminalName))
@@ -151,7 +160,75 @@ namespace StaticHelper
                 throw new Exception(Message);
             }
 
-            var objectFinder = new DMObjectsFinder((projectHelper as ProjectHelper).GetProject());
+            var fromModel = TryGetValveTerminalIOModuleFromModel(
+                clampFunction.Name);
+            if (fromModel != null)
+                return ToEplanFunction(fromModel);
+
+            return GetValveTerminalIOModuleFromCacheOrScan(valveTerminalName);
+        }
+
+        [ExcludeFromCodeCoverage]
+        private Function GetValveTerminalIOModuleFromCacheOrScan(
+            string valveTerminalName)
+        {
+            valveTerminalIoModuleCache ??= new Dictionary<string, Function>();
+            if (valveTerminalIoModuleCache.TryGetValue(valveTerminalName,
+                out var cached))
+            {
+                return cached;
+            }
+
+            var found = FindValveTerminalIOModuleByEplanScan(valveTerminalName);
+            if (found != null)
+                valveTerminalIoModuleCache[valveTerminalName] = found;
+
+            return found ?? new Function();
+        }
+
+        private static Function ToEplanFunction(IEplanFunction function)
+            => (function as EplanFunction)?.Function;
+
+        private static IEplanFunction TryGetValveTerminalIOModuleFromModel(
+            string clampName)
+        {
+            var deviceName = clampName.Contains(":")
+                ? clampName.Split(':')[0]
+                : clampName;
+            var valveTerminal = DeviceManager.GetInstance().GetDevice(deviceName);
+            if (valveTerminal.Description == CommonConst.Cap)
+                return null;
+
+            bool isValveTerminal =
+                valveTerminal.DeviceType == DeviceType.Y ||
+                valveTerminal.DeviceType == DeviceType.DEV_VTUG;
+            if (!isValveTerminal)
+                return null;
+
+            var channel = valveTerminal.Channels.Count > 0
+                ? valveTerminal.Channels[0]
+                : null;
+            if (channel == null || channel.IsEmpty())
+                return null;
+
+            try
+            {
+                var module = IOManager.GetInstance()
+                    .GetModuleByPhysicalNumber(channel.FullModule);
+                return module?.Function;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        [ExcludeFromCodeCoverage]
+        private Function FindValveTerminalIOModuleByEplanScan(
+            string valveTerminalName)
+        {
+            var objectFinder = new DMObjectsFinder(
+                (projectHelper as ProjectHelper).GetProject());
             var functionsFilter = new FunctionsFilter();
             var properties = new FunctionPropertyList();
             properties.FUNC_MAINFUNCTION = true;
@@ -162,22 +239,20 @@ namespace StaticHelper
             foreach (Function function in functions)
             {
                 Function[] subFunctions = function.SubFunctions;
-                if (subFunctions != null)
+                if (subFunctions == null)
+                    continue;
+
+                foreach (Function subFunction in subFunctions)
                 {
-                    foreach (Function subFunction in subFunctions)
-                    {
-                        var functionalText = subFunction.Properties
-                            .FUNC_TEXT_AUTOMATIC
-                            .ToString(ISOCode.Language.L___);
-                        if (functionalText.Contains(valveTerminalName))
-                        {
-                            IOModuleFunction = subFunction.ParentFunction;
-                            return IOModuleFunction;
-                        }
-                    }
+                    var functionalText = subFunction.Properties
+                        .FUNC_TEXT_AUTOMATIC
+                        .ToString(ISOCode.Language.L___);
+                    if (functionalText.Contains(valveTerminalName))
+                        return subFunction.ParentFunction;
                 }
             }
-            return IOModuleFunction;
+
+            return null;
         }
     }
 }

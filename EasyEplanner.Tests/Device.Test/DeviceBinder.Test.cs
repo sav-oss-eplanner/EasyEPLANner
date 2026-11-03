@@ -1,9 +1,7 @@
 using EasyEPlanner;
 using EplanDevice;
-using IO;
 using NUnit.Framework;
 using StaticHelper;
-using System;
 using System.Linq;
 using System.Reflection;
 
@@ -157,9 +155,9 @@ namespace EasyEPlanner.Devices.Tests
 
         private static DeviceBinder CreateBinder()
         {
-            var apiHelper = new ApiHelper();
-            return new DeviceBinder(apiHelper,
-                new IOHelper(new ProjectHelper(apiHelper)));
+            // Helpers зависят от EPLAN DLL; для unit-тестов логики текста
+            // привязки достаточно null (эти методы helper не используют).
+            return new DeviceBinder(null, null);
         }
 
         private static T InvokeStatic<T>(string methodName, params object[] args)

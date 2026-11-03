@@ -28,7 +28,7 @@ EasyEPLANner hilft bei der Beschreibung von technologischen Objekten (Tank, Kess
 Sie können das Repository mit dem nächsten Befehl klonen:
 
 ```bash
-git clone --recurse-submodules https://github.com/savushkin-r-d/EasyEPLANner.git
+git clone --recurse-submodules https://github.com/sav-oss-eplanner/EasyEPLANner.git
 ```
 
 oder, wenn Sie geklont werden, ohne die Untermodule zu initialisieren und zu aktualisieren, versuchen Sie Folgendes:

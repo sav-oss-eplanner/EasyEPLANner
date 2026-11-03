@@ -135,6 +135,9 @@ namespace EasyEPlanner
                         DFrm.GetInstance().ShowDisplayObjects(editorItem,
                             onSetNewValue);
                     }
+
+                    EasyEPlanner.Binding.View.BindingViewControl.Instance
+                        ?.RefreshChecks();
                 }
             }
         }

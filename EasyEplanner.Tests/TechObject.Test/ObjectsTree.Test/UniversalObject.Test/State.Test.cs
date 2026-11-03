@@ -196,14 +196,16 @@ namespace EasyEplanner.Tests
         }
 
 
-        [TestCase(State.StateType.IDLE, State.StateType.RUN)]
-        [TestCase(State.StateType.RUN, State.StateType.PAUSE, State.StateType.STOP)]
-        [TestCase(State.StateType.PAUSE, State.StateType.RUN, State.StateType.STOP)]
-        [TestCase(State.StateType.STOP, State.StateType.IDLE)]
-        [TestCase(State.StateType.STARTING, State.StateType.RUN)]
-        [TestCase(State.StateType.PAUSING, State.StateType.PAUSE)]
-        [TestCase(State.StateType.UNPAUSING, State.StateType.RUN)]
-        [TestCase(State.StateType.STOPPING, State.StateType.STOP)]
+        [TestCase(State.StateType.IDLE,State.StateType.RUN)]
+        [TestCase(State.StateType.STARTING,State.StateType.RUN, State.StateType.STOP)]
+        [TestCase(State.StateType.RUN,State.StateType.COMPLETE, State.StateType.PAUSE, State.StateType.STOP)]
+        [TestCase(State.StateType.COMPLETING,State.StateType.COMPLETE, State.StateType.STOP)]
+        [TestCase(State.StateType.COMPLETE,State.StateType.IDLE)]
+        [TestCase(State.StateType.PAUSING,State.StateType.PAUSE, State.StateType.STOP)]
+        [TestCase(State.StateType.PAUSE,State.StateType.RUN, State.StateType.STOP)]
+        [TestCase(State.StateType.UNPAUSING,State.StateType.RUN, State.StateType.STOP)]
+        [TestCase(State.StateType.STOPPING,State.StateType.STOP)]
+        [TestCase(State.StateType.STOP,State.StateType.IDLE)]
         public void TransitionsTest(State.StateType state, params State.StateType[] expectedMap)
         {
             CollectionAssert.AreEqual(expectedMap, state.StateTransition());

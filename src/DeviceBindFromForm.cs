@@ -103,6 +103,12 @@ namespace EasyEPlanner
             {
                 BindChannel();
             }
+            else
+            {
+                // ResetChannel looks up devices by FUNC_TEXT and can miss;
+                // clear the channel the user actually clicked.
+                SelectedChannel?.Clear();
+            }
 
             RefreshTree();
         }
@@ -386,6 +392,7 @@ namespace EasyEPlanner
             DevicesForm?.RefreshTreeAfterBinding();
             IOViewControl.Instance?.RefreshTreeAfterBinding();
             Devices.View.DevicesViewControl.Instance?.RefreshTreeAfterBinding();
+            Binding.View.BindingViewControl.Instance?.RefreshTreeAfterBinding();
         }
 
         /// <summary>

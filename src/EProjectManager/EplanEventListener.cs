@@ -199,6 +199,7 @@ namespace EasyEPlanner
                 DFrm.GetInstance().ShowNoDevices();
                 IOViewControl.Instance?.Clear();
                 EasyEPlanner.Devices.View.DevicesViewControl.Instance?.Clear();
+                EasyEPlanner.Binding.View.BindingViewControl.Instance?.Clear();
 
                 EProjectManager.GetInstance().ResetCurrentPrj();
                 EProjectManager.isPreCloseProjectComplete = true;
@@ -229,14 +230,11 @@ namespace EasyEPlanner
                 AttemptRestoreWindow(oAMnr.FindAction(nameof(ShowTechObjectsAction)),
                     ctx, "show_obj_window");
 
-                AttemptRestoreWindow(oAMnr.FindAction(nameof(ShowDevicesAction)),
-                    ctx, "show_dev_window");
-
                 AttemptRestoreWindow(oAMnr.FindAction(nameof(ShowDevicesNewAction)),
                     ctx, EasyEPlanner.Devices.View.DevicesViewControl.CfgShowWindowKey);
 
-                AttemptRestoreWindow(oAMnr.FindAction(nameof(ShowOperationsAction)),
-                    ctx, "show_oper_window");
+                AttemptRestoreWindow(oAMnr.FindAction(nameof(ShowBindingAction)),
+                    ctx, EasyEPlanner.Binding.View.BindingViewControl.CfgShowWindowKey);
 
                 AttemptRestoreWindow(oAMnr.FindAction(nameof(ShowPlcAction)),
                     ctx, IOViewControl.CfgShowWindowKey);

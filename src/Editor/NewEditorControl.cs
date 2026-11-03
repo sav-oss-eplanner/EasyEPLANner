@@ -16,6 +16,7 @@ using System.Threading;
 using StaticHelper;
 using TechObject;
 using IO.View;
+using EasyEPlanner.Binding.View;
 
 namespace Editor
 {
@@ -27,6 +28,8 @@ namespace Editor
             InitializeComponent();
             InitObjectListView();
             SetUpToolsHideFromConfig();
+
+            DialogFactory = new DialogFactory(this);
 
             dialogCallbackDelegate = new PI.HookProc(DlgWndHookCallbackFunction);
             mainWndKeyboardCallbackDelegate =
@@ -835,24 +838,20 @@ namespace Editor
         [ExcludeFromCodeCoverage]
         private void CreateItem(ITreeViewItem item)
         {
+            if (!item.IsInsertable)
+                return;
+
+            ITreeViewItem newItem = item.Insert(DialogFactory);
+
+            if (newItem is null) 
+                return;
+
             if (item is TechObject.TechObject)
                 editorTView.Collapse(item);
 
-            if (item.IsInsertable == true)
-            {
-                ITreeViewItem newItem = item.Insert();
-                if (newItem != null)
-                {
-                    editorTView.RefreshObjects(item.Items);
-                    editorTView.RefreshObject(item);
-                    if (item.NeedRebuildParent && item.Parent != null)
-                    {
-                        editorTView.RefreshObject(item.Parent);
-                    }
+            editorTView.RefreshObjects(treeViewItemsList);
 
-                    HighlightItems();
-                }
-            }
+            HighlightItems();
         }
 
         /// <summary>
@@ -1211,6 +1210,8 @@ namespace Editor
                        TechObject.TechObjectManager.GetInstance(),
                        false, false, null, null, null, true);
                 }
+
+                UpdateBindingWindow(null, true);
             }
             else
             {
@@ -1266,6 +1267,8 @@ namespace Editor
                         ModeFrm.GetInstance().ShowNoModes();
                     }
                 }
+
+                UpdateBindingWindow(GetActiveItem(), true);
             }
         }
 
@@ -1298,6 +1301,30 @@ namespace Editor
             return needItem;
         }
 
+        private void UpdateBindingWindow(ITreeViewItem item, bool rebuildTree)
+        {
+            var binding = BindingViewControl.Instance;
+            if (binding is null || !binding.IsVisible())
+                return;
+
+            if (!edit_toolStripButton.Checked)
+            {
+                binding.ShowSignalBinding();
+                return;
+            }
+
+            if (item is null ||
+                (!item.IsUseDevList &&
+                 item is not Restriction &&
+                 item is not AttachedObjects))
+            {
+                binding.ShowEmpty();
+                return;
+            }
+
+            binding.ShowEditorBinding(item, SetNewVal, SetNewVal, rebuildTree);
+        }
+
         /// <summary>
         /// Обновление дерева
         /// </summary>
@@ -1309,6 +1336,7 @@ namespace Editor
             DFrm.GetInstance().RefreshTree();
             IOViewControl.Instance?.RebuildTree();
             EasyEPlanner.Devices.View.DevicesViewControl.Instance?.RebuildTree();
+            BindingViewControl.Instance?.RebuildTree();
 
             editorTView.RefreshObjects(treeViewItemsList);
         }
@@ -1662,6 +1690,9 @@ namespace Editor
                     item, SetNewVal, true);
                 ModeFrm.GetInstance().SelectDevices(item, SetNewVal);
             }
+
+            if (edit_toolStripButton.Checked)
+                UpdateBindingWindow(item, item is not IAction);
 
             editorTView.EndUpdate();
             editorTView.Focus();
@@ -2291,6 +2322,8 @@ namespace Editor
 
             editorTView.EndUpdate();
         }
+
+        readonly IDialogFactory DialogFactory;
 
         public bool wasInit { get; set; }
         private bool IsCellEditing;

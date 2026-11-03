@@ -610,6 +610,7 @@ namespace IO.View
 
             RefreshTree();
             DFrm.GetInstance().RefreshTreeAfterBinding();
+            EasyEPlanner.Binding.View.BindingViewControl.Instance?.RefreshTreeAfterBinding();
         }
 
         private void ShiftModules_Click(object sender, EventArgs e)
@@ -1464,6 +1465,7 @@ namespace IO.View
                 {
                     RefreshTree();
                     DFrm.GetInstance().RefreshTreeAfterBinding();
+                    EasyEPlanner.Binding.View.BindingViewControl.Instance?.RefreshTreeAfterBinding();
                 }
 
                 e.Cancel = true;
@@ -1683,6 +1685,7 @@ namespace IO.View
             Editor.Editor.GetInstance().EditorForm.RefreshTree();
             DFrm.GetInstance().RefreshTree();
             EasyEPlanner.Devices.View.DevicesViewControl.Instance?.RebuildTree();
+            EasyEPlanner.Binding.View.BindingViewControl.Instance?.RebuildTree();
 
             RebuildTree();
         }
@@ -1713,6 +1716,7 @@ namespace IO.View
             RefreshTree();
             DFrm.GetInstance().RefreshTreeAfterBinding();
             EasyEPlanner.Devices.View.DevicesViewControl.Instance?.RefreshTreeAfterBinding();
+            EasyEPlanner.Binding.View.BindingViewControl.Instance?.RefreshTreeAfterBinding();
         }
 
         private void StructPLC_FormatCell(object sender, FormatCellEventArgs e)
