@@ -28,7 +28,7 @@
 Вы можете клонировать репозиторий этой командой:
 
 ```bash
-git clone --recurse-submodules https://github.com/savushkin-r-d/EasyEPLANner.git
+git clone --recurse-submodules https://github.com/sav-oss-eplanner/EasyEPLANner.git
 ```
 
 или, если вы склонировали без инициализации и обновления подмодулей, попробуйте это:

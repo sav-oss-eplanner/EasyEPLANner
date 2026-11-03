@@ -1,9 +1,9 @@
 [submodule "submodule/TreeViewAdv"]
 	path = submodule/TreeViewAdv
-	url = https://github.com/savushkin-r-d/TreeViewAdv.git
+	url = https://github.com/sav-oss-eplanner/TreeViewAdv.git
 [submodule "submodule/ObjectListview"]
 	path = submodule/ObjectListview
-	url = https://github.com/savushkin-r-d/ObjectListView.git
+	url = https://github.com/sav-oss-eplanner/ObjectListView.git
 [submodule "submodule/EplanIdleTimeModule"]
 	path = submodule/EplanIdleTimeModule
-	url = https://github.com/savushkin-r-d/EplanIdleTimeModule.git
+	url = https://github.com/sav-oss-eplanner/EplanIdleTimeModule.git
