@@ -40,7 +40,7 @@ Software engineer creates code in Lua programming language for the project. Easy
 You could clone repository by next command:
 
 ```bash
-git clone --recurse-submodules https://github.com/savushkin-r-d/EasyEPLANner.git
+git clone --recurse-submodules https://github.com/sav-oss-eplanner/EasyEPLANner.git
 ```
 
 or, if you are cloned without initializing and updating submodules, try next:

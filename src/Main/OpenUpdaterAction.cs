@@ -28,7 +28,7 @@ namespace EasyEPlanner
             if (MessageBox.Show($"Средство обновления {AddInModule.LauncherPath} не найдено!\nОткрыть страницу приложения?",
                 "Eplanner", MessageBoxButtons.YesNo, MessageBoxIcon.Error) == DialogResult.Yes)
             {
-                Process.Start(new ProcessStartInfo("https://github.com/savushkin-r-d/EasyEPLANnerUpdater")
+                Process.Start(new ProcessStartInfo("https://github.com/sav-oss-eplanner/EasyEPLANnerUpdater")
                     { UseShellExecute = true });
             }
 
