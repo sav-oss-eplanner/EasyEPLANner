@@ -154,6 +154,49 @@ namespace TechObjectTests
         }
 
         [Test]
+        public void GetNewTechNumber_ReturnsUniqueNumberAmongSameTechType()
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(2, techObjectManager.GetNewTechNumber(2));
+                Assert.AreEqual(2, techObjectManager.GetNewTechNumber(3));
+                Assert.AreEqual(2, techObjectManager.GetNewTechNumber(4));
+                Assert.AreEqual(1, techObjectManager.GetNewTechNumber(5));
+
+                techObjects.Add(new TechObject.TechObject("Танк", GetN => 4, 5, 2, "TANK", -1, "TANK5", "", null));
+                Assert.AreEqual(6, techObjectManager.GetNewTechNumber(2));
+            });
+        }
+
+        [Test]
+        public void Insert_ObjectsInDifferentBaseObjectsWithSameTechType_GetUniqueNumbers()
+        {
+            techObjects.Clear();
+
+            typeof(BaseTechObjectManager).GetField("baseTechObjectManager",
+                System.Reflection.BindingFlags.NonPublic |
+                System.Reflection.BindingFlags.Static)
+                .SetValue(null, null);
+            BaseTechObjectManager.GetInstance().AddBaseObject("TANK", "TANK", 2,
+                "TANK", "TANK", false, "TANK", "TANK", false, true);
+
+            var baseObject1 = new BaseObject("TANK", techObjectManager);
+            var baseObject2 = new BaseObject("TANK", techObjectManager);
+
+            var obj1 = baseObject1.Insert() as TechObject.TechObject;
+            var obj2 = baseObject2.Insert() as TechObject.TechObject;
+
+            Assert.Multiple(() =>
+            {
+                Assert.IsNotNull(obj1);
+                Assert.IsNotNull(obj2);
+                Assert.AreEqual(1, obj1.TechNumber);
+                Assert.AreEqual(2, obj2.TechNumber);
+                Assert.AreNotEqual(obj1.TechNumber, obj2.TechNumber);
+            });
+        }
+
+        [Test]
         public void SaveAsLuaTable()
         {
             techObjects.Remove(CreamTank);

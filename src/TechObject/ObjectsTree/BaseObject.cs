@@ -118,8 +118,8 @@ namespace TechObject
             ObjectsAdder.Reset();
 
             var newObject = new TechObject(baseTechObject.Name, 
-            GetTechObjectLocalNum, localObjects.Count + 1, GetDefaultTechType(), 
-            GetDefaultNameEplan(), cooperParamNum, GetDefaultMonitorName(), "", baseTechObject);
+            GetTechObjectLocalNum, techObjectManager.GetNewTechNumber(GetDefaultTechType()), 
+            GetDefaultTechType(), GetDefaultNameEplan(), cooperParamNum, GetDefaultMonitorName(), "", baseTechObject);
 
             // Работа со списком в дереве и общим списком объектов.
             localObjects.Add(newObject);
@@ -427,11 +427,7 @@ namespace TechObject
                 techObj.BaseTechObject.Name == baseTechObject.Name &&
                 techObj.MarkToCut is false)
             {
-                int newN = 1;
-                if (localObjects.Count > 0)
-                {
-                    newN = localObjects[localObjects.Count - 1].TechNumber + 1;
-                }
+                int newN = techObjectManager.GetNewTechNumber(techObj.TechType);
 
                 int oldObjN = globalObjectsList.IndexOf(techObj) + 1;
                 int newObjN = globalObjectsList.Count + 1;

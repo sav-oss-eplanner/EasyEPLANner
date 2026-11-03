@@ -96,6 +96,14 @@ namespace TechObject
         int GetTechObjectN(string baseObjectName, int techType, int techNumber);
 
         /// <summary>
+        /// Получить новый технологический номер для объекта с заданным типом.
+        /// Номер уникален среди всех объектов с таким же TechType.
+        /// </summary>
+        /// <param name="techType">Технологический тип</param>
+        /// <returns>Новый технологический номер</returns>
+        int GetNewTechNumber(int techType);
+
+        /// <summary>
         /// Получить номер смежного объекта: по типу целевого объекта и искомому тех.номеру
         /// </summary>
         /// <param name="targetObjectIndex">Целевой объект</param>

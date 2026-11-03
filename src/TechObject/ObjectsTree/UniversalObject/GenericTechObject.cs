@@ -164,11 +164,12 @@ namespace TechObject
         /// <summary>
         /// Создать экземпляр тех. объекта
         /// </summary>
-        public TechObject CreateTechObject(BaseObject BaseObject)
+        public TechObject CreateTechObject(BaseObject BaseObject,
+            ITechObjectManager techObjectManager)
         {
             var techObject = new TechObject(this.Name,
                 BaseObject.GetTechObjectLocalNum,
-                inheritedTechObjects.LastOrDefault()?.TechNumber + 1 ?? 1,
+                techObjectManager.GetNewTechNumber(this.TechType),
                 this.TechType, this.NameEplan, this.CooperParamNumber,
                 this.NameBC, this.AttachedObjects.Value, this.BaseTechObject);
 

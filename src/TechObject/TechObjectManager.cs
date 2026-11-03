@@ -172,6 +172,15 @@ namespace TechObject
                 return targetObjectIndex;
         }
 
+        public int GetNewTechNumber(int techType)
+        {
+            return techObjects
+                .Where(to => to.TechType == techType)
+                .Select(to => to.TechNumber)
+                .DefaultIfEmpty(0)
+                .Max() + 1;
+        }
+
         /// <summary>
         /// Проверка и исправление ограничений при удалении/перемещении
         /// операции 

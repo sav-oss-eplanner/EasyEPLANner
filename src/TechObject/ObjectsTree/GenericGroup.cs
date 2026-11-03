@@ -80,7 +80,7 @@ namespace TechObject
                 return InsertCuttedCopy(techObject);
 
             var clone = techObject.Clone(baseObject.GetTechObjectLocalNum,
-                InheritedTechObjects.LastOrDefault()?.TechNumber + 1 ?? 1,
+                techObjectManager.GetNewTechNumber(techObject.TechType),
                 techObjectManager.TechObjects.IndexOf(techObject) + 1,
                 techObjectManager.TechObjects.Count + 1);
 
@@ -172,7 +172,7 @@ namespace TechObject
         /// </summary>
         public override ITreeViewItem Insert()
         {
-            var techObject = genericTechObject.CreateTechObject(baseObject);
+            var techObject = genericTechObject.CreateTechObject(baseObject, techObjectManager);
 
             techObject.AddParent(this);
 
