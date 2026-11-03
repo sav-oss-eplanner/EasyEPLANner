@@ -41,9 +41,9 @@ jobs:
         $response = (curl -L
         -w '%{http_code}'
         -H "Accept: application/vnd.github+json"
-        -H "Authorization: Bearer ${{ secrets.EPLAN_API_BIN }}"
+        -H "Authorization: Bearer ${{ secrets.EPLANNER_TOKEN }}"
         -H "X-GitHub-Api-Version: 2022-11-28"
-        https://api.github.com/orgs/savushkin-r-d/members/${{ github.triggering_actor }})
+        https://api.github.com/orgs/sav-oss-eplanner/members/${{ github.triggering_actor }})
         
         echo "response=$response" >> $env:GITHUB_OUTPUT
       continue-on-error: true
@@ -128,7 +128,7 @@ jobs:
       run: |
         curl -L "https://github.com/gruntwork-io/fetch/releases/download/v0.4.2/fetch_windows_amd64.exe" -O
         md src/bin/${{env.BUILD_CONFIGURATION}}
-        ./fetch_windows_amd64.exe --github-oauth-token="${{ secrets.EPLAN_API_BIN }}" --repo="https://github.com/savushkin-r-d/EPLAN-API-bin" --tag="2.9" --release-asset=".*" "src/bin/${{env.BUILD_CONFIGURATION}}"
+        ./fetch_windows_amd64.exe --github-oauth-token="${{ secrets.EPLANNER_TOKEN }}" --repo="https://github.com/sav-oss-eplanner/EPLAN-API-bin" --tag="2.9" --release-asset=".*" "src/bin/${{env.BUILD_CONFIGURATION}}"
         md submodule/EplanIdleTimeModule/EplanIdleTimeModule/bin/${{env.BUILD_CONFIGURATION}}
         cp src/bin/${{env.BUILD_CONFIGURATION}}/* submodule/EplanIdleTimeModule/EplanIdleTimeModule/bin/${{env.BUILD_CONFIGURATION}}
 
@@ -145,7 +145,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: .\.sonar\scanner\dotnet-sonarscanner begin /k:"savushkin-r-d_EasyEPLANner" /o:"savushkin-r-d" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths="EasyEplanner.Tests/coverage.xml" ${{ env.PULL_REQUEST_DATA }}
+      run: .\.sonar\scanner\dotnet-sonarscanner begin /k:"sav-oss-eplanner_EasyEPLANner" /o:"sav-oss-eplanner" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths="EasyEplanner.Tests/coverage.xml" ${{ env.PULL_REQUEST_DATA }}
       
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
@@ -163,15 +163,7 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
-
-    - name: Download sys_base_objects_description
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: |
-        md /objects_description
-        ./fetch_windows_amd64.exe --github-oauth-token="${{ secrets.EPLAN_API_BIN }}" --repo="https://github.com/savushkin-r-d/ptusa-Lua-dairy-system" --ref="master" "/objects_description"
-        md src/bin/${{env.BUILD_CONFIGURATION}}/Lua/BaseObjectsDescriptionFiles
-        copy /objects_description/EasyEplannerObjectsDescription/sys_base_objects_description.lua src/bin/${{env.BUILD_CONFIGURATION}}/Lua/BaseObjectsDescriptionFiles/sys_base_objects_description.lua
+      run: .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
     - name: Delete extra files
       working-directory: src/bin/${{env.BUILD_CONFIGURATION}}
