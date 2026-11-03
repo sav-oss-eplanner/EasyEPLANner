@@ -56,6 +56,34 @@ namespace EasyEplannerTests.TechObjectTest.ObjectsTreeTest.UniversalObjecsTest
             Assert.AreEqual(expected.ToString(), techObject.SaveAsLuaTable(prefix, globalNum));
         }
 
+        [Test]
+        public void SaveAsLuaTable_WritesAttachedObjectsRefsForExport()
+        {
+            string prefix = "\t\t";
+            int globalNum = 1;
+            var techObject = new TechObject.TechObject("name_to", x => globalNum,
+                2, 3, "eplanName_to", 4, "BC_name_to", "5", null);
+
+            string result = techObject.SaveAsLuaTable(prefix, globalNum,
+                "MIX_NODE:2 PUMP:1");
+
+            StringAssert.Contains(
+                $"{prefix}attached_objects_refs = 'MIX_NODE:2 PUMP:1',\n",
+                result);
+        }
+
+        [Test]
+        public void SaveAsLuaTable_OmitsAttachedObjectsRefsWhenExportValueIsEmpty()
+        {
+            int globalNum = 1;
+            var techObject = new TechObject.TechObject("name_to", x => globalNum,
+                2, 3, "eplanName_to", 4, "BC_name_to", string.Empty, null);
+
+            string result = techObject.SaveAsLuaTable("\t\t", globalNum);
+
+            Assert.IsFalse(result.Contains("attached_objects_refs"));
+        }
+
 
         [Test]
         public void QuickMultiSelect()

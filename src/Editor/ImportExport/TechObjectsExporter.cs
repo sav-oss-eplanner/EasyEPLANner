@@ -87,16 +87,16 @@ namespace Editor
                 bool needExporting = objectsNums.Contains(globalNum);
                 if (needExporting)
                 {
+                    string attachedObjectsRefs =
+                        AttachedObjectReferences.FromIndices(techObjectManager,
+                            obj.AttachedObjects.Value);
+
                     TechObject.TechObject exportingObject = obj.Clone(
                         techObjectManager.GetTechObjectN, globalNum, globalNum);
-
-                    // Убираем привязку при экспорте.
                     exportingObject.AttachedObjects.SetValue("");
 
-                    // Обходим нулевое значение т.к объект ни находится ни в
-                    // каком списке объектов.
-                    string description = exportingObject
-                        .SaveAsLuaTable("\t\t", globalNum);
+                    string description = exportingObject.SaveAsLuaTable("\t\t",
+                        globalNum, attachedObjectsRefs);
                     description = description
                         .Replace("[ 0 ]", $"[ {globalNum} ]");
                     objectsDescription.Append(description);

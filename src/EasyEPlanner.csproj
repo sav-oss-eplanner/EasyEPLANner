@@ -606,6 +606,7 @@
     <Compile Include="TechObject\ObjectsTree\UniversalObject\Actions\ActionGroup.cs" />
     <Compile Include="TechObject\ObjectsTree\UniversalObject\Actions\BaseActionCustom.cs" />
     <Compile Include="TechObject\ObjectsTree\UniversalObject\AttachedObjects.cs" />
+    <Compile Include="TechObject\ObjectsTree\UniversalObject\AttachedObjectReferences.cs" />
     <Compile Include="TechObject\ObjectsTree\UniversalObject\Equipment.cs" />
     <Compile Include="TechObject\ObjectsTree\UniversalObject\Actions\GroupableAction.cs" />
     <Compile Include="TechObject\ObjectsTree\UniversalObject\GenericTechObject.cs" />

@@ -118,6 +118,82 @@ namespace TechObjectTests
         }
 
         [Test]
+        public void GetTechObjectN_By_BaseObjectName_And_TechNumber()
+        {
+            Assert.Multiple(() =>
+            {
+                var techObjectN = techObjectManager.GetTechObjectN("TANK", 1);
+                Assert.AreEqual(1, techObjectN);
+
+                techObjectN = techObjectManager.GetTechObjectN("TANK", 0);
+                Assert.AreEqual(0, techObjectN);
+
+                techObjectN = techObjectManager.GetTechObjectN("UNKNOWN", 1);
+                Assert.AreEqual(0, techObjectN);
+            });
+        }
+
+        [Test]
+        public void ApplyAttachedObjectsReferences_RestoresBindingsByReference()
+        {
+            var aggregateBase = new BaseTechObject
+            {
+                EplanName = "PUMP",
+                S88Level = (int)BaseTechObjectManager.ObjectType.Aggregate,
+            };
+            var pump = new TechObject.TechObject("Pump", GetN => 4, 1, 1,
+                "PUMP", -1, "P1", "", aggregateBase);
+            techObjects.Add(pump);
+
+            var unitBase = new BaseTechObject
+            {
+                EplanName = "TANK",
+                S88Level = (int)BaseTechObjectManager.ObjectType.Unit,
+            };
+            var unit = new TechObject.TechObject("Unit", GetN => 5, 1, 2,
+                "UNIT", -1, "U1", "", unitBase);
+            techObjects.Add(unit);
+            unit.AttachedObjectsRefs = "PUMP:1";
+
+            techObjectManager.ApplyAttachedObjectsReferences(new[] { unit });
+
+            Assert.AreEqual("4", unit.AttachedObjects.Value);
+            Assert.AreEqual(string.Empty, unit.AttachedObjectsRefs);
+        }
+
+        [Test]
+        public void ApplyAttachedObjectsReferences_PrefersImportedObjectWithSameNumber()
+        {
+            var mixBase = new BaseTechObject
+            {
+                EplanName = "MIX_NODE",
+                S88Level = (int)BaseTechObjectManager.ObjectType.Aggregate,
+            };
+            var existingNode = new TechObject.TechObject("Old node", GetN => 1, 3, 1,
+                "MIX1", -1, "M1", "", mixBase);
+            techObjects.Add(existingNode);
+
+            var importedNode = new TechObject.TechObject("New node", GetN => 5, 3, 1,
+                "MIX2", -1, "M2", "", mixBase);
+            techObjects.Add(importedNode);
+
+            var unitBase = new BaseTechObject
+            {
+                EplanName = "TANK",
+                S88Level = (int)BaseTechObjectManager.ObjectType.Unit,
+            };
+            var importedUnit = new TechObject.TechObject("New tank", GetN => 6, 3, 2,
+                "TANK", -1, "T3", "", unitBase);
+            techObjects.Add(importedUnit);
+            importedUnit.AttachedObjectsRefs = "MIX_NODE:3";
+
+            techObjectManager.ApplyAttachedObjectsReferences(
+                new[] { importedUnit, importedNode });
+
+            Assert.AreEqual("5", importedUnit.AttachedObjects.Value);
+        }
+
+        [Test]
         public void GetTechObjectN_By_BaseObjectName_TechType_TechNumber()
         {
             Assert.Multiple(() =>
@@ -227,19 +303,19 @@ namespace TechObjectTests
 
             Assert.Multiple(() =>
             {
-                var techObject = techObjectManager.AddObject(4, 2, "Танк", 2, "TANK", -1, "TANK2", "TANK", "", 1, false);
+                var techObject = techObjectManager.AddObject(4, 2, "Танк", 2, "TANK", -1, "TANK2", "TANK", "", "", 1, false);
                 Assert.AreSame(techObjectManager.GetTObject(4), techObject);
 
-                var genericTechObject = techObjectManager.AddObject(4, 2, "Танк", 2, "TANK", -1, "TANK", "TANK", "", 1, true);
+                var genericTechObject = techObjectManager.AddObject(4, 2, "Танк", 2, "TANK", -1, "TANK", "TANK", "", "", 1, true);
                 Assert.AreSame(techObjectManager.GetGenericTObject(4), genericTechObject);
 
-                techObject = techObjectManager.AddObject(5, 3, "Танк", 3, "tank_", -1, "tank_3", "tank_", "", 0, false);
+                techObject = techObjectManager.AddObject(5, 3, "Танк", 3, "tank_", -1, "tank_3", "tank_", "", "", 0, false);
                 Assert.AreSame(techObjectManager.GetTObject(5), techObject);
 
-                techObject = techObjectManager.AddObject(6, 3, "Пользовательский объект", 2, "USER", -1, "", "USER", "", -1, false);
+                techObject = techObjectManager.AddObject(6, 3, "Пользовательский объект", 2, "USER", -1, "", "USER", "", "", -1, false);
                 Assert.AreSame(techObjectManager.GetTObject(6), techObject);
 
-                genericTechObject = techObjectManager.AddObject(7, 3, "Пользовательский объект", 2, "USER", -1, "", "USER", "", 2, true);
+                genericTechObject = techObjectManager.AddObject(7, 3, "Пользовательский объект", 2, "USER", -1, "", "USER", "", "", 2, true);
                 Assert.AreSame(techObjectManager.GetGenericTObject(5), genericTechObject);
             });
         }

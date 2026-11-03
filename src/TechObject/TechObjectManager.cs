@@ -152,6 +152,16 @@ namespace TechObject
             return techObjects.IndexOf(techObject) + 1;
         }
 
+        public int GetTechObjectN(string baseObjectName, int techNumber)
+        {
+            var techObject = TechObjects
+                .Find(to =>
+                    (to.BaseTechObject?.EplanName.Equals(baseObjectName) ?? false) &&
+                    to.TechNumber == techNumber);
+
+            return techObjects.IndexOf(techObject) + 1;
+        }
+
         public int GetTechObjectN(string baseObjectName, int techType, int techNumber)
         {
             var techObject = TechObjects
@@ -337,10 +347,14 @@ namespace TechObject
         public TechObject AddObject(int globalNumber, int techN, string name,
             int techType, string nameEplan, int cooperParamNumber,
             string NameBC, string baseTechObjectName, string attachedObjects,
-            int genericTechObjectNumber, bool isGeneric)
+            string attachedObjectsRefs, int genericTechObjectNumber,
+            bool isGeneric)
         {
             // globalNumber игнорируется в этом методе, но используется при
             // импорте описания из файла (аналогичная сигнатура, другое тело).
+            // attachedObjectsRefs игнорируется при загрузке проекта;
+            // обрабатывается в TechObjectsImporter.LoadObjects.
+            _ = attachedObjectsRefs;
 
             var baseTechObject = BaseTechObjectManager.GetInstance()
                 .GetTechObjectCopy(baseTechObjectName);
@@ -363,6 +377,17 @@ namespace TechObject
                 AddObject(obj, genericTechObjectNumber);
                 return obj;
             }
+        }
+
+        /// <summary>
+        /// Восстановить привязанные агрегаты по переносимым ссылкам.
+        /// </summary>
+        public void ApplyAttachedObjectsReferences(
+            IEnumerable<TechObject> objects = null)
+        {
+            IEnumerable<TechObject> targetObjects = objects ?? TechObjects;
+            foreach (TechObject techObject in targetObjects)
+                AttachedObjectReferences.ApplyTo(this, techObject, objects);
         }
 
         /// <summary>
