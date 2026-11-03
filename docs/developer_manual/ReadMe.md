@@ -6,7 +6,7 @@
 
 Дополнение подключается к версии **EPLAN 2.8** (*сейчас 2.9*) и новее. Большинство вопросов связанных с работой **EPLAN**, **EPLAN API** можно найти в документации **EPLAN**.
 
-[Пользовательская документация](https://github.com/savushkin-r-d/EasyEPLANner/tree/master/docs/user_manual).
+[Пользовательская документация](https://github.com/sav-oss-eplanner/EasyEPLANner/tree/master/docs/user_manual).
 
 [Документация по API](https://www.eplan.help/en-US/infoportal/content/api/2.9/index.html).
 
