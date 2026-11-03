@@ -17,6 +17,8 @@
     <SccAuxPath>Svn</SccAuxPath>
     <SccProvider>SubversionScc</SccProvider>
     <TargetFrameworkProfile />
+    <RunSettingsFilePath>
+    </RunSettingsFilePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(DesignTimeBuild)' == 'true'">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -130,6 +132,14 @@
     <Compile Include="Device\IODevices\WATCHDOG.cs" />
     <Compile Include="Device\ISetupTerminal.cs" />
     <Compile Include="Device\ITag.cs" />
+    <Compile Include="Editor\Dialogs\IInsertDialog.cs" />
+    <Compile Include="Editor\Dialogs\IDialogFactory.cs" />
+    <Compile Include="Editor\Dialogs\StatesCreatorDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Editor\Dialogs\StatesCreatorDialog.Designer.cs">
+      <DependentUpon>StatesCreatorDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="EProjectManager\IEProjectManager.cs" />
     <Compile Include="FileSavers\XML\Chbase\Channel.cs" />
     <Compile Include="FileSavers\XML\Chbase\Driver.cs" />
@@ -212,6 +222,33 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Main\ShowDevicesNewAction.cs" />
+    <Compile Include="Main\ShowBindingAction.cs" />
+    <Compile Include="Binding\ViewModel\BindingMode.cs" />
+    <Compile Include="Binding\ViewModel\BindingSearch.cs" />
+    <Compile Include="Binding\ViewModel\BindingFilterableViewItemBase.cs" />
+    <Compile Include="Binding\ViewModel\BindingCheckHelper.cs" />
+    <Compile Include="Binding\ViewModel\BindingSelectionCollector.cs" />
+    <Compile Include="Binding\ViewModel\BindingTreeItems.cs" />
+    <Compile Include="Binding\ViewModel\BindingTreeBuilder.cs" />
+    <Compile Include="Binding\ViewModel\BindingViewModel.cs" />
+    <Compile Include="Binding\ViewModel\IBindingCheckable.cs" />
+    <Compile Include="Binding\ViewModel\IBindingRoot.cs" />
+    <Compile Include="Binding\ViewModel\IBindingViewModel.cs" />
+    <Compile Include="Binding\View\BindingTreeViewKeys.cs" />
+    <Compile Include="Binding\View\BindingViewControl.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Binding\View\BindingViewControl.Designer.cs">
+      <DependentUpon>BindingViewControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Binding\View\BindingViewControl.EplanForm.cs">
+      <DependentUpon>BindingViewControl.cs</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Binding\View\BindingViewControl.TreeState.cs">
+      <DependentUpon>BindingViewControl.cs</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
     <None Include="Lua\sys_subtype_channels_count.lua">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -339,10 +376,10 @@
     </Compile>
     <Compile Include="Editor\IEditor.cs" />
     <Compile Include="Editor\ObjectProperty.cs" />
-    <Compile Include="Editor\ObjectAdder\ObjectAdder.cs">
+    <Compile Include="Editor\Dialogs\ObjectAdder.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Editor\ObjectAdder\ObjectAdder.Designer.cs">
+    <Compile Include="Editor\Dialogs\ObjectAdder.Designer.cs">
       <DependentUpon>ObjectAdder.cs</DependentUpon>
     </Compile>
     <Compile Include="Editor\TreeViewItem.cs" />
@@ -529,6 +566,8 @@
     <Compile Include="StaticHelper\IOHelper.cs" />
     <Compile Include="StaticHelper\IPConverter.cs" />
     <Compile Include="StaticHelper\KeyboardHookHelper.cs" />
+    <Compile Include="StaticHelper\EplanEmbeddedWindowHelper.cs" />
+    <Compile Include="StaticHelper\ObjectListViewTreeHelper.cs" />
     <Compile Include="StaticHelper\LuaHelper.cs" />
     <Compile Include="StaticHelper\RegexDefaults.cs" />
     <Compile Include="StaticHelper\ApiHelper.cs" />
@@ -603,6 +642,9 @@
     <EmbeddedResource Include="Editor\Controls\SearchIterator.resx">
       <DependentUpon>SearchIterator.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Editor\Dialogs\StatesCreatorDialog.resx">
+      <DependentUpon>StatesCreatorDialog.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Editor\ImportExport\TechObjectsExportForm.resx">
       <DependentUpon>TechObjectsExportForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -613,7 +655,7 @@
       <DependentUpon>NewEditorControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Editor\ObjectAdder\ObjectAdder.resx">
+    <EmbeddedResource Include="Editor\Dialogs\ObjectAdder.resx">
       <DependentUpon>ObjectAdder.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileSavers\XML\Chbase\XMLReporterDialog.resx">
@@ -636,6 +678,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Device\View\DevicesViewControl.resx">
       <DependentUpon>DevicesViewControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Binding\View\BindingViewControl.resx">
+      <DependentUpon>BindingViewControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Logs\LogFrm.resx">
       <DependentUpon>LogFrm.cs</DependentUpon>

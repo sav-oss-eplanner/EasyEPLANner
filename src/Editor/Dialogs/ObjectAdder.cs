@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Windows.Forms;
 
 namespace Editor
 {
+    [ExcludeFromCodeCoverage]
     public partial class ObjectsAdder : Form
     {
         public ObjectsAdder()
@@ -93,17 +95,12 @@ namespace Editor
             objectSubTypes.ClearSelected();
             objectSubTypes.Items.Clear();
 
-            if(objectTypes.SelectedItem == null)
-            {
-                return;
-            }
-            else
+            if (objectTypes.SelectedItem is not null)
             {
                 string selectedType = objectTypes.SelectedItem.ToString();
                 int level = baseTechObjectsManager.GetS88Level(selectedType);
                 var subTypes = baseTechObjectsManager.Objects
-                    .Where(x => x.S88Level == level &&
-                        x.Deprecated == false)
+                    .Where(x => x.S88Level == level && !x.Deprecated)
                     .Select(x => x.Name).ToArray();
                 objectSubTypes.Items.AddRange(subTypes);
             }

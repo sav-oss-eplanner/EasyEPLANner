@@ -151,6 +151,14 @@ namespace Editor
         /// вставляется.</returns>
         ITreeViewItem Insert();
 
+        /// <summary>
+        /// Добавление элемента с вызовом диалогового окна. Insert 
+        /// </summary>
+        /// <returns>
+        /// Добавленный элемент. Может быть null, тогда ничего не вставляется.
+        /// </returns>
+        ITreeViewItem Insert(IDialogFactory dialogFactory);
+
         /// <summary>    
         /// Признак возможности добавления устройств через список устройств.
         /// </summary>

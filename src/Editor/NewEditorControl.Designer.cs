@@ -445,6 +445,16 @@ namespace Editor
             this.imageList1.Images.SetKeyName(14, "generic.png");
             this.imageList1.Images.SetKeyName(15, "group.png");
             this.imageList1.Images.SetKeyName(16, "Run.png");
+            this.imageList1.Images.SetKeyName(17, "IDLE");
+            this.imageList1.Images.SetKeyName(18, "STARTING");
+            this.imageList1.Images.SetKeyName(19, "RUN");
+            this.imageList1.Images.SetKeyName(20, "COMPLETING");
+            this.imageList1.Images.SetKeyName(21, "COMPLETE");
+            this.imageList1.Images.SetKeyName(22, "PAUSING");
+            this.imageList1.Images.SetKeyName(23, "PAUSE");
+            this.imageList1.Images.SetKeyName(24, "UNPAUSING");
+            this.imageList1.Images.SetKeyName(25, "STOPPING");
+            this.imageList1.Images.SetKeyName(26, "STOP");
             // 
             // editorTView
             // 

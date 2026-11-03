@@ -1,13 +1,13 @@
 ## Как внести свой вклад в EasyEPLANner
 
-Пожалуйста, следуйте правилам кодирования, которые находятся [тут](https://github.com/savushkin-r-d/EasyEPLANner/blob/master/docs/codestyle.md).
+Пожалуйста, следуйте правилам кодирования, которые находятся [тут](https://github.com/sav-oss-eplanner/EasyEPLANner/blob/master/docs/codestyle.md).
 
 Для работы на платформе GitHub изучите [эту](https://github.com/savushkin-r-d/hello-tortoisegit) документацию.
 
 ### Если вы нашли ошибку
 
-+ Поищите в [вопросах](https://github.com/savushkin-r-d/EasyEPLANner/issues) (_issues_), описана ли такая проблема там. Если она описана, не стоит беспокоиться, мы работаем над её решением.
-+ Если Вы не нашли описанную Вами проблему, то создайте [новый вопрос](https://github.com/savushkin-r-d/EasyEPLANner/issues/new) (_issue_). Опишите найденную Вами ошибку, а так же укажите, при каких условиях Вы смогли её найти.
++ Поищите в [вопросах](https://github.com/sav-oss-eplanner/EasyEPLANner/issues) (_issues_), описана ли такая проблема там. Если она описана, не стоит беспокоиться, мы работаем над её решением.
++ Если Вы не нашли описанную Вами проблему, то создайте [новый вопрос](https://github.com/sav-oss-eplanner/EasyEPLANner/issues/new) (_issue_). Опишите найденную Вами ошибку, а так же укажите, при каких условиях Вы смогли её найти.
 
 ### Хотите исправить ошибку?
 
@@ -39,7 +39,7 @@ PB (pull request) не обязательно должен представля�
 
 ### Документация к проекту
 
-Алгоритм работы с дополнением описан в [пользовательской документации](https://github.com/savushkin-r-d/EasyEPLANner/tree/master/docs/user_manual).
+Алгоритм работы с дополнением описан в [пользовательской документации](https://github.com/sav-oss-eplanner/EasyEPLANner/tree/master/docs/user_manual).
 
 ### Есть вопросы по исходному коду или предложения по улучшению?
 

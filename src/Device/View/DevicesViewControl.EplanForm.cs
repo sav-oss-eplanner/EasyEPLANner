@@ -10,7 +10,7 @@ using System.Windows.Forms;
 namespace EasyEPlanner.Devices.View
 {
     /// <summary>
-    /// Встройка окна в панель EPLAN «Устройства».
+    /// Встройка окна в панель EPLAN «Клеммники» (заголовок «Устройства»).
     /// </summary>
     [ExcludeFromCodeCoverage]
     public partial class DevicesViewControl : Form
@@ -39,8 +39,8 @@ namespace EasyEPlanner.Devices.View
         {
             Process currentProcess = Process.GetCurrentProcess();
 
-            const int wndWmCommand = 35116;
-            const string windowName = "Устройства";
+            const int wndWmCommand = 35094;
+            const string windowName = "Клеммники";
 
             if (isLoaded)
             {

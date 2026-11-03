@@ -207,9 +207,9 @@ namespace EasyEPlanner
             System.Diagnostics.Process oCurrent =
                 System.Diagnostics.Process.GetCurrentProcess();
 
-            // Идентификатор команды вызова окна "Клеммники"
-            const int wndWmCommand = 35094;
-            string windowName = "Клеммники";
+            // Идентификатор команды вызова окна "Устройства"
+            const int wndWmCommand = 35116;
+            string windowName = "Устройства";
 
             if (isLoaded == true)
             {

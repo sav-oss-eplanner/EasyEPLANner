@@ -1,7 +1,9 @@
 ﻿using Eplan.EplApi.Base;
 using Eplan.EplApi.DataModel;
 using Eplan.EplApi.HEServices;
+using EasyEPlanner;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace StaticHelper
 {
@@ -24,14 +26,21 @@ namespace StaticHelper
             this.apiHelper = apiHelper;
         }
 
+        [ExcludeFromCodeCoverage]
         public Project GetProject()
         {
+            Project managedProject = EProjectManager.GetInstance()
+                .GetCurrentPrj();
+            if (managedProject != null)
+                return managedProject;
+
             SelectionSet selection = apiHelper.GetSelectionSet();
             const bool useDialog = false;
             Project project = selection.GetCurrentProject(useDialog);
             return project;
         }
 
+        [ExcludeFromCodeCoverage]
         public string GetProjectProperty(string propertyName)
         {
             var project = GetProject();

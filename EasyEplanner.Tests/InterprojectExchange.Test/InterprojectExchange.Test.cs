@@ -56,7 +56,7 @@ namespace EasyEplannerTests.InterprojectExchangeTest
 
             Assert.Multiple(() =>
             {
-                Assert.AreEqual(expected, interprojectExchange.CheckBindingSignals());
+            Assert.AreEqual(expected, interprojectExchange.CheckBindingSignals());
                 Assert.IsTrue(advancedModel.Object.HasBindingError);
                 Assert.IsTrue(advancedModel.Object.Loaded);
                 CollectionAssert.AreEqual(

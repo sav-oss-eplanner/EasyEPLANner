@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Aga.Controls.Tree;
 using Editor;
@@ -678,18 +679,50 @@ namespace TechObject
 
         public StateType Type { get; private set; }
 
+        [ExcludeFromCodeCoverage]
+        public override ImageIndexEnum ImageIndex => Type switch
+        {
+            StateType.IDLE => ImageIndexEnum.STATE_IDLE,
+            StateType.STARTING => ImageIndexEnum.STATE_STARTING,
+            StateType.RUN => ImageIndexEnum.STATE_RUN,
+            StateType.COMPLETING => ImageIndexEnum.STATE_COMPLETING,
+            StateType.COMPLETE => ImageIndexEnum.STATE_COMPLETE,
+            StateType.PAUSING => ImageIndexEnum.STATE_PAUSING,
+            StateType.PAUSE => ImageIndexEnum.STATE_PAUSE,
+            StateType.UNPAUSING => ImageIndexEnum.STATE_UNPAUSING,
+            StateType.STOPPING => ImageIndexEnum.STATE_STOPPING,
+            StateType.STOP => ImageIndexEnum.STATE_STOP,
+            _ => ImageIndexEnum.NONE,
+        };
+
         public enum StateType : int
         {
             IDLE = 0,   // Простой
             RUN,        // Выполнение
             PAUSE,      // Пауза
-            STOP,       // Остановка       
+            STOP,       // Остановка
+            COMPLETE,   // Выполнено
 
-            STARTING = 10,   // Запускается
-            PAUSING,    // Становится в паузу
-            UNPAUSING,  // Выходит из паузы
-            STOPPING,   // Останавливается
+            STARTING = 10,  // Запускается
+            PAUSING,        // Становится в паузу
+            UNPAUSING,      // Выходит из паузы
+            STOPPING,       // Останавливается
+            COMPLETING      // Завершается
         }
+
+        public static List<StateType> GetOrderedStates()
+        => [ 
+            StateType.IDLE,
+            StateType.STARTING,
+            StateType.RUN,
+            StateType.COMPLETING,
+            StateType.COMPLETE,
+            StateType.PAUSING,
+            StateType.PAUSE,
+            StateType.UNPAUSING,
+            StateType.STOPPING,
+            StateType.STOP
+        ];
 
         public static readonly ReadOnlyDictionary<StateType, string> StateNames = 
             new(new Dictionary<StateType, string>()
@@ -697,11 +730,13 @@ namespace TechObject
                 [StateType.IDLE] = "Простой",
                 [StateType.RUN] = "Выполнение",
                 [StateType.PAUSE] = "Пауза",
-                [StateType.STOP] = "Остановка",
+                [StateType.STOP] = "Остановлен",
+                [StateType.COMPLETE] = "Выполнено",
                 [StateType.STARTING] = "Запускается",
                 [StateType.PAUSING] = "Становится в паузу",
                 [StateType.UNPAUSING] = "Выходит из паузы",
-                [StateType.STOPPING] = "Останавливается",
+                [StateType.STOPPING] = "Остановка",
+                [StateType.COMPLETING] = "Завершение",
             });
 
         private string name;        ///< Имя.
@@ -711,6 +746,9 @@ namespace TechObject
     }
 
 
+    /// <summary>
+    /// Таблица переходов между состояниями
+    /// </summary>
     public static class StateTransitionMapExtension
     {
         public static string Name(this State.StateType type) 
@@ -722,13 +760,15 @@ namespace TechObject
         public static List<State.StateType> StateTransition(this State.StateType type) => type switch
         {
             State.StateType.IDLE => [State.StateType.RUN],
-            State.StateType.RUN => [State.StateType.PAUSE, State.StateType.STOP],
+            State.StateType.STARTING => [State.StateType.RUN, State.StateType.STOP],
+            State.StateType.RUN => [State.StateType.COMPLETE, State.StateType.PAUSE, State.StateType.STOP],
+            State.StateType.COMPLETING => [State.StateType.COMPLETE, State.StateType.STOP],
+            State.StateType.COMPLETE => [State.StateType.IDLE],
+            State.StateType.PAUSING => [State.StateType.PAUSE, State.StateType.STOP],
             State.StateType.PAUSE => [State.StateType.RUN, State.StateType.STOP],
-            State.StateType.STOP => [State.StateType.IDLE],
-            State.StateType.STARTING => [State.StateType.RUN],
-            State.StateType.PAUSING => [State.StateType.PAUSE],
-            State.StateType.UNPAUSING => [State.StateType.RUN],
+            State.StateType.UNPAUSING => [State.StateType.RUN, State.StateType.STOP],
             State.StateType.STOPPING => [State.StateType.STOP],
+            State.StateType.STOP => [State.StateType.IDLE],
             _ => []
         };
     }

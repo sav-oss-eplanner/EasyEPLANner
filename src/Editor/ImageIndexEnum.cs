@@ -29,6 +29,16 @@ namespace Editor
         GenericTechObject = 14,
         GenericGroup = 15,
         Run = 16,
+        STATE_IDLE = 17,
+        STATE_STARTING = 18,
+        STATE_RUN = 19,
+        STATE_COMPLETING = 20,
+        STATE_COMPLETE = 21,
+        STATE_PAUSING = 22,
+        STATE_PAUSE = 23,
+        STATE_UNPAUSING = 24,
+        STATE_STOPPING = 25,
+        STATE_STOP = 26,
         NONE = 100,
     }
 }
