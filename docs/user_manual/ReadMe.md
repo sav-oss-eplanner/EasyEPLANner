@@ -1292,6 +1292,9 @@ ProjectTestEnabled=True
         <tr> <td rowspan = 1> <b> 
         PT_IOLINK
             <td> <b> P_ERR <td> Аварийное значение
+        <tr> <td> <b> 
+        VC_IOLINK
+            <td> <b> P_FB <td> Обратная связь
         <tr> <td rowspan = 17> <b> 
         C_PID<br>(ПИД-регулятор)
             <td> <b>                     <td> <p align=center> Описание – значение по умолчанию <tr>
@@ -2265,6 +2268,7 @@ _Примечание:_ для корректного экспорта базы 
         * NAMUR_ST - состояние по стандарту NAMUR;
         * OPENED - открыт;
         * CLOSED - закрыт;
+        * P_FB - обратная связь;
 3. Устройство - **M**
     * **M**
         * ST - состояние;
