@@ -561,5 +561,118 @@ namespace TechObjectTests
 
             Assert.AreSame(techObject, userObject.Items.SingleOrDefault());
         }
+
+        [Test]
+        public void Insert_SingleInstanceObject_BlocksSecondInsert()
+        {
+            var techObjects = new List<TechObject.TechObject>();
+            var techObjectManagerMock = new Mock<ITechObjectManager>();
+            techObjectManagerMock.Setup(tom => tom.TechObjects).Returns(techObjects);
+
+            var baseObject = new SingleInstanceBaseObject(techObjectManagerMock.Object);
+
+            Assert.Multiple(() =>
+            {
+                Assert.IsTrue(baseObject.IsInsertable);
+
+                var first = baseObject.Insert();
+                Assert.IsNotNull(first);
+                Assert.AreEqual(1, baseObject.Count);
+                Assert.AreEqual(1, techObjects.Count);
+                Assert.IsFalse(baseObject.IsInsertable);
+                Assert.IsFalse(baseObject.MessageShown);
+
+                var second = baseObject.Insert();
+                Assert.IsNull(second);
+                Assert.AreEqual(1, baseObject.Count);
+                Assert.AreEqual(1, techObjects.Count);
+                Assert.IsTrue(baseObject.MessageShown);
+            });
+        }
+
+        [Test]
+        public void InsertCopy_SingleInstanceObject_BlocksDuplicationButAllowsMove()
+        {
+            var techObjects = new List<TechObject.TechObject>();
+            var techObjectManagerMock = new Mock<ITechObjectManager>();
+            techObjectManagerMock.Setup(tom => tom.TechObjects).Returns(techObjects);
+            var techObjectParentMock = new Mock<ITreeViewItem>();
+            techObjectParentMock.Setup(o => o.Cut(It.IsAny<TechObject.TechObject>()))
+                .Returns<TechObject.TechObject>(to => to);
+
+            var baseObject = new SingleInstanceBaseObject(techObjectManagerMock.Object);
+            baseObject.Insert();
+
+            var techObject = new TechObject.TechObject("Главный модуль мойки",
+                GetN => 1, 1, 2, "CIP_MODULE", -1, "", "", baseObject.BaseTechObject);
+            techObject.Parent = techObjectParentMock.Object;
+
+            Assert.Multiple(() =>
+            {
+                Assert.IsFalse(baseObject.IsInsertableCopy);
+
+                var copyResult = baseObject.InsertCopy(techObject);
+                Assert.IsNull(copyResult);
+                Assert.AreEqual(1, baseObject.Count);
+
+                techObject.MarkToCut = true;
+                var cutResult = baseObject.InsertCopy(techObject);
+                Assert.AreSame(techObject, cutResult);
+                Assert.AreEqual(2, baseObject.Count);
+            });
+        }
+
+        [Test]
+        public void CreateNewGenericGroup_SingleInstanceObject_BlocksSecond()
+        {
+            var techObjects = new List<TechObject.TechObject>();
+            var genericTechObjects = new List<GenericTechObject>();
+            var techObjectManagerMock = new Mock<ITechObjectManager>();
+            techObjectManagerMock.Setup(tom => tom.TechObjects).Returns(techObjects);
+            techObjectManagerMock.Setup(tom => tom.GenericTechObjects).Returns(genericTechObjects);
+
+            var baseObject = new SingleInstanceBaseObject(techObjectManagerMock.Object);
+
+            Assert.Multiple(() =>
+            {
+                var first = baseObject.CreateNewGenericGroup();
+                Assert.IsNotNull(first);
+                Assert.AreEqual(1, genericTechObjects.Count);
+
+                var second = baseObject.CreateNewGenericGroup();
+                Assert.IsNull(second);
+                Assert.AreEqual(1, genericTechObjects.Count);
+                Assert.IsTrue(baseObject.MessageShown);
+            });
+        }
+
+        /// <summary>
+        /// Базовый объект-заглушка с признаком единственного экземпляра.
+        /// Заглушка переопределяет показ сообщения, чтобы не блокировать тесты.
+        /// </summary>
+        private class SingleInstanceBaseObject : BaseObject
+        {
+            public SingleInstanceBaseObject(ITechObjectManager techObjectManager)
+                : base("main_cip_module", techObjectManager)
+            {
+                typeof(BaseObject).GetField("baseTechObject",
+                    System.Reflection.BindingFlags.NonPublic |
+                    System.Reflection.BindingFlags.Instance)
+                    .SetValue(this, new BaseTechObject
+                    {
+                        Name = "Главный модуль мойки",
+                        EplanName = "main_cip_module",
+                        S88Level = 2,
+                        IsSingleInstance = true
+                    });
+            }
+
+            public bool MessageShown { get; private set; }
+
+            protected override void ShowSingleInstanceMessage()
+            {
+                MessageShown = true;
+            }
+        }
     }
 }

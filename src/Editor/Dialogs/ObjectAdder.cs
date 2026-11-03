@@ -101,8 +101,33 @@ namespace Editor
                 int level = baseTechObjectsManager.GetS88Level(selectedType);
                 var subTypes = baseTechObjectsManager.Objects
                     .Where(x => x.S88Level == level && !x.Deprecated)
-                    .Select(x => x.Name).ToArray();
-                objectSubTypes.Items.AddRange(subTypes);
+                    .ToList();
+
+                // Для объектов с ограничением единственного экземпляра,
+                // уже присутствующих в проекте, скрыть их из списка.
+                if (subTypes.Any(x => x.IsSingleInstance))
+                {
+                    try
+                    {
+                        var techObjectManager = TechObject.TechObjectManager
+                            .GetInstance();
+                        subTypes = subTypes
+                            .Where(x => !x.IsSingleInstance ||
+                                !techObjectManager.TechObjects.Any(t =>
+                                    t.BaseTechObject?.EplanName == x.EplanName) &&
+                                !techObjectManager.GenericTechObjects.Any(t =>
+                                    t.BaseTechObject?.EplanName == x.EplanName))
+                            .ToList();
+                    }
+                    catch
+                    {
+                        // Если менеджер объектов недоступен - показываем
+                        // все подтипы без фильтрации.
+                    }
+                }
+
+                objectSubTypes.Items.AddRange(
+                    subTypes.Select(x => x.Name).ToArray());
             }
         }
 
