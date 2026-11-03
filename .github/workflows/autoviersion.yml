@@ -1,7 +1,11 @@
 name: Auto-update version
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: auto-update-version
+  cancel-in-progress: false
 
 on:
   schedule:
@@ -10,6 +14,8 @@ on:
 
 env:
   AssemblyInfoPath: ./src/Properties/AssemblyInfo.cs
+  BaseBranch: master
+  AutoVersionBranch: automation/auto-version
 
 jobs:
   autoversion:
@@ -18,7 +24,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          token: ${{ secrets.BOT_ACCESS_TO_EPLAN }}
+          token: ${{ secrets.EPLANNER_TOKEN }}
+          ref: master
+          fetch-depth: 0
       - id: date
         run: |
           echo "Month=$(date +'%m')" >> $env:GITHUB_OUTPUT
@@ -32,8 +40,55 @@ jobs:
           -replace '(?<start>Copyright ©  2012 - )\d{4}',
           "`${start}${{ steps.date.outputs.Year }}" 
           | Set-Content ${{ env.AssemblyInfoPath }}
-      - name: Commit update
+      - name: Commit version update to branch
+        id: commit
+        env:
+          VERSION_MONTH_NAME: ${{ steps.date.outputs.MonthName }}
+          VERSION_YEAR: ${{ steps.date.outputs.Year }}
         run: |
-          git config --global user.name 'Git bot'
-          git config --global user.email 'bot@noreply.github.com'
-          git commit -am "[config] Auto-update version to ${{ steps.date.outputs.MonthName }} ${{ steps.date.outputs.Year }}" && git push || echo "No changes to commit"
+          $ErrorActionPreference = 'Stop'
+          git config user.name 'Git bot'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git config user.email 'bot@noreply.github.com'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git checkout -B $env:AutoVersionBranch
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git add $env:AssemblyInfoPath
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $stagedChanges = git diff --cached --name-only
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not $stagedChanges) {
+            "changed=false" | Add-Content -Path $env:GITHUB_OUTPUT
+            exit 0
+          }
+          git commit -m "[config] Auto-update version to $env:VERSION_MONTH_NAME $env:VERSION_YEAR"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git push --force origin "HEAD:refs/heads/$env:AutoVersionBranch"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "changed=true" | Add-Content -Path $env:GITHUB_OUTPUT
+
+      - name: Create pull request and enable merge queue
+        env:
+          GH_TOKEN: ${{ secrets.EPLANNER_TOKEN }}
+          VERSION_CHANGED: ${{ steps.commit.outputs.changed }}
+          VERSION_MONTH_NAME: ${{ steps.date.outputs.MonthName }}
+          VERSION_YEAR: ${{ steps.date.outputs.Year }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $prNumber = gh pr list --repo $env:GITHUB_REPOSITORY --state open --head $env:AutoVersionBranch --base $env:BaseBranch --json number --jq '.[0].number'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $prNumber = "$prNumber".Trim()
+          if (-not $prNumber -or $prNumber -eq 'null') {
+            if ($env:VERSION_CHANGED -ne 'true') {
+              Write-Output 'No version changes and no open auto-version pull request'
+              exit 0
+            }
+            gh pr create --repo $env:GITHUB_REPOSITORY --base $env:BaseBranch --head $env:AutoVersionBranch --title "[config] Auto-update version to $env:VERSION_MONTH_NAME $env:VERSION_YEAR" --body 'Automatically generated monthly version and copyright update.'
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $prNumber = gh pr list --repo $env:GITHUB_REPOSITORY --state open --head $env:AutoVersionBranch --base $env:BaseBranch --json number --jq '.[0].number'
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $prNumber = "$prNumber".Trim()
+          }
+          if (-not $prNumber -or $prNumber -eq 'null') { throw 'Auto-version pull request was not found after creation' }
+          gh pr merge $prNumber --auto
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
