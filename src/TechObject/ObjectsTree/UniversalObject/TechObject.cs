@@ -519,13 +519,18 @@ namespace TechObject
         /// <param name="value">Значение параметра</param>
         public void SetBaseProperty(string luaName, string value)
         {
-            if (baseTechObject.BaseProperties.Count > 0)
+            // Без базового объекта список свойств пуст — не падаем на null
+            // (например, если описания базовых объектов не загрузились).
+            if (baseProperties?.Properties == null ||
+                baseProperties.Properties.Count == 0)
             {
-                var foundProperty = baseProperties.GetProperty(luaName);
-                if (foundProperty != null)
-                {
-                    foundProperty.SetValue(value);
-                }
+                return;
+            }
+
+            var foundProperty = baseProperties.GetProperty(luaName);
+            if (foundProperty != null)
+            {
+                foundProperty.SetValue(value ?? string.Empty);
             }
         }
         #endregion

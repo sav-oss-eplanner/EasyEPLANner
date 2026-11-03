@@ -119,6 +119,79 @@ namespace IOTests
             Assert.AreEqual(Icon.None, (root as IHasDescriptionIcon).Icon);
         }
 
+        [Test]
+        public void Items_MultipleNodesWithoutLocation_ShowsEachNode()
+        {
+            var nodeA1 = Mock.Of<IIONode>(n =>
+                n.N == 1 &&
+                n.Name == "A1" &&
+                n.TypeStr == "AXC F 3152" &&
+                n.Type == IONode.TYPES.T_PHOENIX_CONTACT_3152 &&
+                n.Location == string.Empty &&
+                n.LocationDescription == string.Empty &&
+                n.IOModules == new List<IIOModule>() &&
+                n.ExtensionModules == new List<IIONode>());
+            var nodeA100 = Mock.Of<IIONode>(n =>
+                n.N == 2 &&
+                n.Name == "A100" &&
+                n.TypeStr == "AXL F BK ETH" &&
+                n.Type == IONode.TYPES.T_ETHERNET &&
+                n.Location == string.Empty &&
+                n.LocationDescription == string.Empty &&
+                n.IOModules == new List<IIOModule>() &&
+                n.ExtensionModules == new List<IIONode>());
+            var ioManager = Mock.Of<IIOManager>(manager =>
+                manager.IONodes == new List<IIONode> { nodeA1, nodeA100 } &&
+                manager.DeletedModules == new List<IIOModule>());
+            var context = Mock.Of<IIOViewModel>(viewModel =>
+                viewModel.IOManager == ioManager);
+
+            var root = new Root(context);
+
+            CollectionAssert.AreEqual(
+                new[] { "1. A1", "2. A100" },
+                root.Items.Select(i => i.Name).ToArray());
+        }
+
+        [Test]
+        public void Items_NodesWithLocation_GroupsByCabinet()
+        {
+            var nodeA1 = Mock.Of<IIONode>(n =>
+                n.N == 1 &&
+                n.Name == "A1" &&
+                n.TypeStr == "AXC F 3152" &&
+                n.Type == IONode.TYPES.T_PHOENIX_CONTACT_3152 &&
+                n.Location == "+MCC1.1" &&
+                n.LocationDescription == "Motor Control Center" &&
+                n.IOModules == new List<IIOModule>() &&
+                n.ExtensionModules == new List<IIONode>());
+            var nodeA100 = Mock.Of<IIONode>(n =>
+                n.N == 2 &&
+                n.Name == "A100" &&
+                n.TypeStr == "AXL F BK ETH" &&
+                n.Type == IONode.TYPES.T_ETHERNET &&
+                n.Location == "+CAB1" &&
+                n.LocationDescription == "Алмикс №1" &&
+                n.IOModules == new List<IIOModule>() &&
+                n.ExtensionModules == new List<IIONode>());
+            var ioManager = Mock.Of<IIOManager>(manager =>
+                manager.IONodes == new List<IIONode> { nodeA1, nodeA100 } &&
+                manager.DeletedModules == new List<IIOModule>());
+            var context = Mock.Of<IIOViewModel>(viewModel =>
+                viewModel.IOManager == ioManager);
+
+            var root = new Root(context);
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(2, root.Items.Count());
+                Assert.AreEqual("+MCC1.1", root.Items.ElementAt(0).Name);
+                Assert.AreEqual("Motor Control Center",
+                    root.Items.ElementAt(0).Description);
+                Assert.AreEqual("+CAB1", root.Items.ElementAt(1).Name);
+            });
+        }
+
         private static IIOViewModel CreateContext(IIONode ioNode)
         {
             var ioManager = Mock.Of<IIOManager>(manager =>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using EplanDevice;
 using IO;
@@ -159,6 +159,45 @@ namespace EasyEPlanner
             fileData.Append(devicesForIo);
 
             SaveData(pathToFile, fileData);
+        }
+
+        /// <summary>
+        /// Сохранить только объекты и ограничения (без main.io.lua).
+        /// </summary>
+        public static void SaveTechObjectsAndRestrictions(string pacName,
+            string path, bool silentMode = true)
+        {
+            var par = new ParametersForSave(pacName, path, silentMode);
+            if (!Directory.Exists(par.path))
+            {
+                Directory.CreateDirectory(par.path);
+            }
+
+            SaveTechObjectsFile(par);
+            SaveRestrictionsFile(par);
+        }
+
+        /// <summary>
+        /// Сохранить только main.io.lua (устройства и узлы).
+        /// </summary>
+        public static void SaveMainIoFile(string pacName, string path,
+            bool silentMode = true)
+        {
+            var par = new ParametersForSave(pacName, path, silentMode);
+            if (!Directory.Exists(par.path))
+            {
+                Directory.CreateDirectory(par.path);
+            }
+
+            string pathToFile = par.path + @"\" + mainIOFileName;
+            if (!File.Exists(pathToFile) &&
+                deviceManager.Devices.Count == 0 &&
+                IOManager.IONodes.Count == 0)
+            {
+                return;
+            }
+
+            SaveIOFile(par);
         }
 
         /// <summary>

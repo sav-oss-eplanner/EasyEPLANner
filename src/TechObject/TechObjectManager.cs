@@ -1,4 +1,4 @@
-﻿using EasyEPlanner;
+using EasyEPlanner;
 using Editor;
 using System;
 using System.Collections.Generic;

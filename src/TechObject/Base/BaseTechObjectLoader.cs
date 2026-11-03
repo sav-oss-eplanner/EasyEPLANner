@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using EasyEPlanner;
 
@@ -90,7 +91,13 @@ namespace TechObject
         {
             if (Directory.Exists(pathToCatalog))
             {
-                return Directory.GetFiles(pathToCatalog);
+                // DescriptionTemplate.lua — справочный шаблон, не валидный
+                // скрипт; его нельзя загружать как описание объектов.
+                return Directory.GetFiles(pathToCatalog)
+                    .Where(f => !string.Equals(Path.GetFileName(f),
+                        defaultFileName,
+                        StringComparison.OrdinalIgnoreCase))
+                    .ToArray();
             }
             else
             {

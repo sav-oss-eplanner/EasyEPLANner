@@ -77,6 +77,15 @@ namespace EplanDevice
         /// </summary>
         public virtual string SetSubType(string subType)
         {
+            ApplySubTypeName(subType);
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Сменить подтип в памяти без пересоздания каналов.
+        /// </summary>
+        public void ApplySubTypeName(string subType)
+        {
             try
             {
                 dSubType = (DeviceSubType)Enum.Parse(typeof(DeviceSubType),
@@ -86,8 +95,14 @@ namespace EplanDevice
             {
                 dSubType = DeviceSubType.NONE;
             }
+        }
 
-            return string.Empty;
+        /// <summary>
+        /// Установить описание устройства в памяти.
+        /// </summary>
+        public void SetDescription(string value)
+        {
+            description = value ?? string.Empty;
         }
 
         public virtual string GetConnectionType()

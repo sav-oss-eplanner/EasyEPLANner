@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -45,6 +45,15 @@ namespace IO
 
             isStub = true;
             return Stub;
+        }
+
+        /// <summary>
+        /// Имя узла по типу (первый подходящий из sys_io_nodes.lua).
+        /// </summary>
+        public static string GetNameByType(IONode.TYPES type)
+        {
+            IONodeInfo res = nodes.Find(x => x.Type == type);
+            return res?.Name;
         }
 
         /// <summary>

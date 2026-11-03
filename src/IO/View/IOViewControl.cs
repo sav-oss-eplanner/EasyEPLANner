@@ -77,15 +77,43 @@ namespace IO.View
         /// </summary>
         public static void Start()
         {
+            EnsureInstanceReady(refreshTree: true);
+            Instance.ShowDlg();
+        }
+
+        /// <summary>
+        /// Показать структуру ПЛК в указанном хосте (standalone App).
+        /// </summary>
+        public static void StartInHost(Control host)
+        {
+            EnsureInstanceReady(refreshTree: true);
+            Instance.ShowInHost(host);
+        }
+
+        /// <summary>
+        /// Перестроить дерево после перезагрузки main.io.lua.
+        /// </summary>
+        public static void RefreshFromIOManager()
+        {
+            if (Instance == null || Instance.IsDisposed)
+                return;
+
+            EnsureInstanceReady(refreshTree: true);
+        }
+
+        private static void EnsureInstanceReady(bool refreshTree = false)
+        {
             if (DataContext?.IOManager == null)
             {
                 DataContext = new IOViewModel(IOManager.GetInstance());
             }
+            else if (refreshTree)
+            {
+                DataContext.RebuildTree();
+            }
 
             Instance ??= new IOViewControl(DataContext);
-
             Instance.InitDataStructPLC();
-            Instance.ShowDlg();
         }
 
         public void Clear()
@@ -423,10 +451,16 @@ namespace IO.View
                 InsertDeletedModule(draggedModule.DeletedModule.IOModule,
                     dropTarget);
 
-                EProjectManager.GetInstance().SyncAndSave(false);
-
-                Editor.Editor.GetInstance().EditorForm.RefreshTree();
-                DFrm.GetInstance().RefreshTree();
+                if (EasyEPlanner.ProjectManager.GetInstance().IsStandalone)
+                {
+                    EasyEPlanner.ProjectManager.GetInstance().SaveTechObjectsFromContext(false);
+                }
+                else
+                {
+                    SyncAndSaveFromEplan();
+                    Editor.Editor.GetInstance().EditorForm.RefreshTree();
+                    DFrm.GetInstance().RefreshTree();
+                }
 
                 RebuildTree();
             }
@@ -554,6 +588,11 @@ namespace IO.View
 
         private void GoToFasAt(Point location)
         {
+            if (EasyEPlanner.ProjectManager.GetInstance().IsStandalone)
+            {
+                return;
+            }
+
             var rowObject = (StructPLC.GetItemAt(location.X, location.Y) as
                 OLVListItem)?.RowObject;
             if (!TryGetEplanFunction(rowObject, out var function))
@@ -572,6 +611,7 @@ namespace IO.View
                 selectedModules.Count == 1 &&
                 selectedModules[0].IOModule.Function?.IsValid == true;
             goToFasToolStripMenuItem.Enabled =
+                !EasyEPlanner.ProjectManager.GetInstance().IsStandalone &&
                 TryGetSelectedEplanFunction(out _);
             reserveErrorClampsToolStripMenuItem.Enabled =
                 BindingErrorClampCollector.Collect(GetSelectedViewObjects())
@@ -585,6 +625,11 @@ namespace IO.View
 
         private void GoToFas_Click(object sender, EventArgs e)
         {
+            if (EasyEPlanner.ProjectManager.GetInstance().IsStandalone)
+            {
+                return;
+            }
+
             if (!TryGetSelectedEplanFunction(out var function))
             {
                 return;
@@ -625,10 +670,16 @@ namespace IO.View
             {
                 ShiftModulesFrom(module, shiftValue);
 
-                EProjectManager.GetInstance().SyncAndSave(false);
-
-                Editor.Editor.GetInstance().EditorForm.RefreshTree();
-                DFrm.GetInstance().RefreshTree();
+                if (EasyEPlanner.ProjectManager.GetInstance().IsStandalone)
+                {
+                    EasyEPlanner.ProjectManager.GetInstance().SaveTechObjectsFromContext(false);
+                }
+                else
+                {
+                    SyncAndSaveFromEplan();
+                    Editor.Editor.GetInstance().EditorForm.RefreshTree();
+                    DFrm.GetInstance().RefreshTree();
+                }
 
                 RebuildTree();
             }
@@ -657,10 +708,16 @@ namespace IO.View
             {
                 RestoreDeletedModules(restoreTargets);
 
-                EProjectManager.GetInstance().SyncAndSave(false);
-
-                Editor.Editor.GetInstance().EditorForm.RefreshTree();
-                DFrm.GetInstance().RefreshTree();
+                if (EasyEPlanner.ProjectManager.GetInstance().IsStandalone)
+                {
+                    EasyEPlanner.ProjectManager.GetInstance().SaveTechObjectsFromContext(false);
+                }
+                else
+                {
+                    SyncAndSaveFromEplan();
+                    Editor.Editor.GetInstance().EditorForm.RefreshTree();
+                    DFrm.GetInstance().RefreshTree();
+                }
 
                 RebuildTree();
             }
@@ -683,10 +740,16 @@ namespace IO.View
             {
                 DeleteModules(modules);
 
-                EProjectManager.GetInstance().SyncAndSave(false);
-
-                Editor.Editor.GetInstance().EditorForm.RefreshTree();
-                DFrm.GetInstance().RefreshTree();
+                if (EasyEPlanner.ProjectManager.GetInstance().IsStandalone)
+                {
+                    EasyEPlanner.ProjectManager.GetInstance().SaveTechObjectsFromContext(false);
+                }
+                else
+                {
+                    SyncAndSaveFromEplan();
+                    Editor.Editor.GetInstance().EditorForm.RefreshTree();
+                    DFrm.GetInstance().RefreshTree();
+                }
 
                 RebuildTree();
             }
@@ -745,6 +808,8 @@ namespace IO.View
                 .Select(module => module.IOModule);
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(
+            System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         private bool TryGetSelectedEplanFunction(out Function function)
         {
             function = null;
@@ -759,6 +824,8 @@ namespace IO.View
             return TryGetEplanFunction(selectedObjects[0], out function);
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(
+            System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         private static bool TryGetEplanFunction(object viewObject,
             out Function function)
         {
@@ -1679,16 +1746,27 @@ namespace IO.View
 
         private void toolStripButton1_Click(object sender, EventArgs e)
         {
-            EProjectManager.GetInstance().SyncAndSave(false);
+            if (EasyEPlanner.ProjectManager.GetInstance().IsStandalone)
+            {
+                EasyEPlanner.ProjectManager.GetInstance().SaveTechObjectsFromContext(false);
+            }
+            else
+            {
+                SyncAndSaveFromEplan();
+                Editor.Editor.GetInstance().EditorForm.RefreshTree();
+                DFrm.GetInstance().RefreshTree();
+            }
 
-            
-            Editor.Editor.GetInstance().EditorForm.RefreshTree();
-            DFrm.GetInstance().RefreshTree();
             EasyEPlanner.Devices.View.DevicesViewControl.Instance?.RebuildTree();
             EasyEPlanner.Binding.View.BindingViewControl.Instance?.RebuildTree();
 
             RebuildTree();
         }
+
+        [System.Runtime.CompilerServices.MethodImpl(
+            System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static void SyncAndSaveFromEplan() =>
+            EProjectManager.GetInstance().SyncAndSave(false);
 
         private void KeyDownHandler(object sender, KeyEventArgs e)
         {

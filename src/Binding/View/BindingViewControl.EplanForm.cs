@@ -13,6 +13,7 @@ namespace EasyEPlanner.Binding.View
         public static readonly string CfgShowWindowKey = "show_binding_window";
 
         private bool isLoaded;
+        private bool isEmbeddedInHost;
 
         private static readonly string caption = "Привязка\0";
         private static readonly byte[] newCapt =
@@ -29,6 +30,9 @@ namespace EasyEPlanner.Binding.View
 
         public bool IsVisible()
         {
+            if (isEmbeddedInHost)
+                return MainTableLayoutPanel?.Parent != null;
+
             if (isLoaded)
                 return PI.IsWindowVisible(wndBindingVisiblePtr);
             return Visible;
@@ -90,6 +94,29 @@ namespace EasyEPlanner.Binding.View
         private void ShowFloating() =>
             EplanEmbeddedWindowHelper.ShowFloating(this, MainTableLayoutPanel,
                 ref isLoaded);
+
+        /// <summary>
+        /// Встроить содержимое в WinForms-хост (DockPanel App).
+        /// </summary>
+        public void ShowInHost(Control host)
+        {
+            if (host == null)
+                return;
+
+            isEmbeddedInHost = true;
+
+            if (MainTableLayoutPanel.Parent != host)
+            {
+                MainTableLayoutPanel.Parent?.Controls
+                    .Remove(MainTableLayoutPanel);
+                host.Controls.Clear();
+                MainTableLayoutPanel.Dock = DockStyle.Fill;
+                host.Controls.Add(MainTableLayoutPanel);
+            }
+
+            MainTableLayoutPanel.Show();
+            isLoaded = false;
+        }
 
         public static void SaveCfg()
         {

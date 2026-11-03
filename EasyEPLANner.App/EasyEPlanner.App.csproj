@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <RootNamespace>EasyEPlanner.App</RootNamespace>
+    <AssemblyName>EasyEPlanner.App</AssemblyName>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>preview</LangVersion>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <!-- Общий выходной каталог с надстройкой EasyEPlanner (src\bin\{Configuration}),
+         чтобы приложение при запуске находило и использовало один и тот же
+         configuration.ini рядом со сборкой EasyEPlanner.dll. -->
+    <OutputPath>..\src\bin\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\src\EasyEPlanner.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="DockPanelSuite" Version="3.1.0" />
+    <PackageReference Include="DockPanelSuite.ThemeVS2015" Version="3.1.0" />
+  </ItemGroup>
+  <!-- Описание базовых объектов (Lua\BaseObjectsDescriptionFiles) больше не
+       копируется отдельно: приложение делит один выходной каталог с
+       надстройкой EasyEPlanner (см. OutputPath выше), поэтому файлы,
+       которые разработчик кладёт в src\bin\{Configuration}\Lua\..., уже
+       доступны без дополнительного копирования. -->
+</Project>

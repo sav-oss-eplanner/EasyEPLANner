@@ -42,6 +42,21 @@ namespace EasyEPlanner.Devices.View
 
         public static void Start()
         {
+            EnsureInstanceReady();
+            Instance.ShowDlg();
+        }
+
+        /// <summary>
+        /// Показать дерево устройств в указанном хосте (standalone App).
+        /// </summary>
+        public static void StartInHost(Control host)
+        {
+            EnsureInstanceReady();
+            Instance.ShowInHost(host);
+        }
+
+        private static void EnsureInstanceReady()
+        {
             DataContext = new DevicesViewModel(DeviceManager.GetInstance());
             if (Instance is null || Instance.IsDisposed)
             {
@@ -50,7 +65,6 @@ namespace EasyEPlanner.Devices.View
 
             Instance.EnsureRuntimeInitialized();
             Instance.InitDataDevicesTree();
-            Instance.ShowDlg();
         }
 
         public void Clear()
@@ -315,12 +329,25 @@ namespace EasyEPlanner.Devices.View
 
         private void SyncButton_Click(object sender, EventArgs e)
         {
-            EProjectManager.GetInstance().SyncAndSave(false);
-            Editor.Editor.GetInstance().EditorForm.RefreshTree();
-            DFrm.GetInstance().RefreshTree();
+            if (ProjectManager.GetInstance().IsStandalone)
+            {
+                ProjectManager.GetInstance().SaveTechObjectsFromContext(false);
+            }
+            else
+            {
+                SyncAndSaveFromEplan();
+                Editor.Editor.GetInstance().EditorForm?.RefreshTree();
+                DFrm.GetInstance().RefreshTree();
+            }
+
             IOViewControl.Instance?.RebuildTree();
             RebuildTree();
         }
+
+        [System.Runtime.CompilerServices.MethodImpl(
+            System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static void SyncAndSaveFromEplan() =>
+            EProjectManager.GetInstance().SyncAndSave(false);
 
         private void GroupingToggleButton_Click(object sender, EventArgs e)
         {
@@ -626,7 +653,8 @@ namespace EasyEPlanner.Devices.View
             if (e.Button == MouseButtons.Middle ||
                 (e.Button == MouseButtons.Left && ModifierKeys.HasFlag(Keys.Control)))
             {
-                GoToFasAt(e.Location);
+                if (!ProjectManager.GetInstance().IsStandalone)
+                    GoToFasAt(e.Location);
                 return;
             }
 
@@ -642,6 +670,8 @@ namespace EasyEPlanner.Devices.View
         {
             if (e.Button != MouseButtons.Left)
                 return;
+            if (ProjectManager.GetInstance().IsStandalone)
+                return;
 
             if (devicesTree.MouseMoveHitTest.Item?.RowObject is not DevicesChannelItem channelItem)
                 return;
@@ -655,11 +685,19 @@ namespace EasyEPlanner.Devices.View
 
         private void ContextMenu_Opening(object sender, CancelEventArgs e)
         {
+            if (ProjectManager.GetInstance().IsStandalone)
+            {
+                goToFasMenuItem.Enabled = false;
+                return;
+            }
+
             goToFasMenuItem.Enabled = TryGetSelectedEplanFunction(out _);
         }
 
         private void GoToFasMenuItem_Click(object sender, EventArgs e)
         {
+            if (ProjectManager.GetInstance().IsStandalone)
+                return;
             if (!TryGetSelectedEplanFunction(out var function))
                 return;
 
@@ -668,6 +706,9 @@ namespace EasyEPlanner.Devices.View
 
         private void GoToFasAt(Point location)
         {
+            if (ProjectManager.GetInstance().IsStandalone)
+                return;
+
             var rowObject = (devicesTree.GetItemAt(location.X, location.Y) as OLVListItem)
                 ?.RowObject;
             if (!TryGetEplanFunction(rowObject, out var function))

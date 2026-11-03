@@ -13,6 +13,30 @@ namespace IOTests
     public class NodeTest
     {
         [Test]
+        public void Getters_WithoutEplanFunction_UsesNodeIp()
+        {
+            var ioNode = Mock.Of<IIONode>(n =>
+                n.N == 1 &&
+                n.Name == "A100" &&
+                n.TypeStr == "AXC F 3152" &&
+                n.IP == "192.168.0.10" &&
+                n.Function == null &&
+                n.IOModules == new List<IIOModule>() &&
+                n.ExtensionModules == new List<IIONode>());
+
+            var node = new Node(ioNode, Mock.Of<ILocation>());
+
+            CollectionAssert.AreEqual(
+                new List<string>()
+                {
+                    "192.168.0.10",
+                    string.Empty,
+                    string.Empty
+                },
+                node.Items.Select(i => i.Description));
+        }
+
+        [Test]
         public void Getters()
         {
             var expanded = true;

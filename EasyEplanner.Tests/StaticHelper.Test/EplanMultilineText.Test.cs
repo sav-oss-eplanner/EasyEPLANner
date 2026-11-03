@@ -82,11 +82,24 @@ namespace EasyEplannerTests.StaticHelperTest
         }
 
         [Test]
-        public void IsSameFunctionalText_ReturnsTrueForIdenticalText()
+        public void IsSameDescription_TreatsEplanLineBreaksAsLuaDotSpace()
         {
-            Assert.IsTrue(EplanMultilineText.IsSameFunctionalText(
-                "same",
-                "same"));
+            Assert.IsTrue(EplanMultilineText.IsSameDescription(
+                "first\u00B6second", "first. second"));
+            Assert.IsTrue(EplanMultilineText.IsSameDescription(
+                "first\nsecond", "first. second"));
+            Assert.IsTrue(EplanMultilineText.IsSameDescription(
+                "first\r\nsecond", "first. second"));
+            Assert.IsFalse(EplanMultilineText.IsSameDescription(
+                "first. second", "other"));
+        }
+
+        [Test]
+        public void NormalizeDescription_JoinsLinesWithDotSpace()
+        {
+            Assert.AreEqual("first. second",
+                EplanMultilineText.NormalizeDescription("first\u00B6second"));
+            Assert.AreEqual("", EplanMultilineText.NormalizeDescription(null));
         }
     }
 }

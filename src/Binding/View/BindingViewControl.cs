@@ -40,14 +40,29 @@ namespace EasyEPlanner.Binding.View
 
         public static void Start()
         {
+            EnsureInstanceReady();
+            Instance.ShowDlg();
+            Instance.SyncWithEditor();
+        }
+
+        /// <summary>
+        /// Показать привязку в указанном хосте (standalone App).
+        /// </summary>
+        public static void StartInHost(Control host)
+        {
+            EnsureInstanceReady();
+            Instance.ShowInHost(host);
+            Instance.SyncWithEditor();
+        }
+
+        private static void EnsureInstanceReady()
+        {
             DataContext = new BindingViewModel(DeviceManager.GetInstance());
             if (Instance is null || Instance.IsDisposed)
                 Instance = new BindingViewControl();
 
             Instance.EnsureRuntimeInitialized();
             Instance.InitDataBindingTree();
-            Instance.ShowDlg();
-            Instance.SyncWithEditor();
         }
 
         public void Clear()
@@ -398,8 +413,7 @@ namespace EasyEPlanner.Binding.View
         private void SyncWithEditor()
         {
             var editorForm = Editor.Editor.GetInstance().EditorForm;
-            if (editorForm is null ||
-                !EProjectManager.GetInstance().EnabledEditMode)
+            if (editorForm is null || !IsEditorBindingActive(editorForm))
             {
                 ShowSignalBinding();
                 return;
@@ -418,6 +432,20 @@ namespace EasyEPlanner.Binding.View
             ShowEditorBinding(item, editorForm.SetNewVal, editorForm.SetNewVal,
                 true);
         }
+
+        private static bool IsEditorBindingActive(NewEditorControl editorForm)
+        {
+            if (ProjectManager.GetInstance().IsStandalone)
+                return editorForm.StandaloneHost &&
+                    editorForm.Editable;
+
+            return GetEplanEnabledEditMode();
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(
+            System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static bool GetEplanEnabledEditMode() =>
+            EProjectManager.GetInstance().EnabledEditMode;
 
         private DeviceBinder GetDeviceBinder()
         {
@@ -470,13 +498,26 @@ namespace EasyEPlanner.Binding.View
         [ExcludeFromCodeCoverage]
         private void SyncButton_Click(object sender, EventArgs e)
         {
-            EProjectManager.GetInstance().SyncAndSave(false);
-            Editor.Editor.GetInstance().EditorForm.RefreshTree();
-            DFrm.GetInstance().RefreshTree();
+            if (ProjectManager.GetInstance().IsStandalone)
+            {
+                ProjectManager.GetInstance().SaveTechObjectsFromContext(false);
+            }
+            else
+            {
+                SyncAndSaveFromEplan();
+                Editor.Editor.GetInstance().EditorForm?.RefreshTree();
+                DFrm.GetInstance().RefreshTree();
+            }
+
             IOViewControl.Instance?.RebuildTree();
             DevicesViewControl.Instance?.RebuildTree();
             RebuildTree();
         }
+
+        [System.Runtime.CompilerServices.MethodImpl(
+            System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static void SyncAndSaveFromEplan() =>
+            EProjectManager.GetInstance().SyncAndSave(false);
 
         private void GroupingToggleButton_Click(object sender, EventArgs e)
         {
@@ -568,6 +609,8 @@ namespace EasyEPlanner.Binding.View
         {
             if (e.Button != MouseButtons.Left)
                 return;
+            if (ProjectManager.GetInstance().IsStandalone)
+                return;
             if (DataContext.Mode is not BindingMode.SignalBinding)
                 return;
             if (bindingTree.MouseMoveHitTest.Item?.RowObject
@@ -583,11 +626,19 @@ namespace EasyEPlanner.Binding.View
 
         private void ContextMenu_Opening(object sender, CancelEventArgs e)
         {
+            if (ProjectManager.GetInstance().IsStandalone)
+            {
+                goToFasMenuItem.Enabled = false;
+                return;
+            }
+
             goToFasMenuItem.Enabled = TryGetSelectedEplanFunction(out _);
         }
 
         private void GoToFasMenuItem_Click(object sender, EventArgs e)
         {
+            if (ProjectManager.GetInstance().IsStandalone)
+                return;
             if (!TryGetSelectedEplanFunction(out var function))
                 return;
 
@@ -596,6 +647,9 @@ namespace EasyEPlanner.Binding.View
 
         private void GoToFasAt(Point location)
         {
+            if (ProjectManager.GetInstance().IsStandalone)
+                return;
+
             var rowObject = (bindingTree.GetItemAt(location.X, location.Y) as OLVListItem)
                 ?.RowObject;
             if (!TryGetEplanFunction(rowObject, out var function))

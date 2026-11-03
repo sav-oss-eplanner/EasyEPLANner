@@ -500,6 +500,19 @@ namespace EplanDevice
         }
 
         /// <summary>
+        /// Добавить устройство без EPLAN Function (загрузка из main.io.lua).
+        /// </summary>
+        public IODevice AddDeviceFromLua(string devName, string description,
+            string subType, string paramStr, string rtParamStr, string propStr,
+            int dLocation, out string errStr, string articleName,
+            string iolConfProperties)
+        {
+            return AddDevice(devName, description, subType, paramStr,
+                rtParamStr, propStr, dLocation, out errStr, articleName,
+                iolConfProperties);
+        }
+
+        /// <summary>
         /// Добавление канала ввода\вывода к устройству.
         /// </summary>
         /// <param name="devName">Имя устройство.</param>

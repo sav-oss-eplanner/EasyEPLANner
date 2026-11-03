@@ -665,7 +665,35 @@ namespace InterprojectExchange
             }
         }
 
-        public string MainProjectName => eProjectManager.GetModifyingCurrentProjectName();
+        public string MainProjectName
+        {
+            get
+            {
+                if (ProjectManager.GetInstance().IsStandalone ||
+                    eProjectManager == null)
+                {
+                    return ResolveStandaloneMainProjectName();
+                }
+
+                return eProjectManager.GetModifyingCurrentProjectName();
+            }
+        }
+
+        private static string ResolveStandaloneMainProjectName()
+        {
+            var context = ProjectContextHolder.Current;
+            if (context == null)
+                return string.Empty;
+
+            if (!string.IsNullOrEmpty(context.ProjectFolderPath) &&
+                MainIoProjectNameReader.TryReadFromFolder(
+                    context.ProjectFolderPath, out string pacName, out _))
+            {
+                return pacName;
+            }
+
+            return context.ProjectName ?? string.Empty;
+        }
 
         public string DefaultPathWithProjects
         {

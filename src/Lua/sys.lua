@@ -145,7 +145,13 @@ end
 function proc_object_properties(par, obj)
     if type (par) == "table" then
         for luaName, value in pairs(par) do
-            obj:SetBaseProperty(luaName, value)
+            -- Числа/булевы из Lua не приводятся к string автоматически
+            if type(value) == "boolean" then
+                value = value and "true" or "false"
+            elseif type(value) ~= "string" then
+                value = tostring(value)
+            end
+            obj:SetBaseProperty(tostring(luaName), value)
         end
     end
 end

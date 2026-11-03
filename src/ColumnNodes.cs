@@ -46,9 +46,16 @@ namespace EasyEPlanner
 
             if (device.DeviceType.SubTypeNames().Contains(newValue))
             {
-                device.Function.SubType = newValue;
-
-                Value = "Обновите проект";
+                if (device.Function != null)
+                {
+                    device.Function.SubType = newValue;
+                    Value = "Обновите проект";
+                }
+                else
+                {
+                    device.ApplySubTypeName(newValue);
+                    Value = newValue;
+                }
             }
             else Value = oldValue;
         }
@@ -65,7 +72,9 @@ namespace EasyEPlanner
                 return;
 
             Value = newValue;
-            device.Function.Description = newValue;
+            device.SetDescription(newValue);
+            if (device.Function != null)
+                device.Function.Description = newValue;
         }
     }
 

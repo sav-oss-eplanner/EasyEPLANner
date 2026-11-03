@@ -14,6 +14,7 @@ using System.Text;
 using EasyEPlanner.PxcIolinkConfiguration.Interfaces;
 using StaticHelper;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using PInvoke;
 using Editor;
 
@@ -109,6 +110,16 @@ namespace EasyEPlanner
                 }
                 oProgress.EndPart();
 
+                if (loadFromLua)
+                {
+                    oProgress.BeginPart(5, "Сверка устройств с main.io.lua");
+                    DeviceLuaFsaSynchronizer.TryApplyFromProjectFolder(
+                        deviceManager,
+                        ProjectContextHolder.Current?.ProjectFolderPath,
+                        () => projectConfiguration.SynchronizeDevices());
+                    oProgress.EndPart();
+                }
+
                 oProgress.BeginPart(25, "Считывание привязки устройств");
                 projectConfiguration.ReadBinding();
                 oProgress.EndPart();
@@ -169,8 +180,21 @@ namespace EasyEPlanner
             int res = 0;
 
             StreamReader sr = null;
-            string path = GetPtusaProjectsPath(projectName) + projectName +
-                fileName;
+            string path;
+            if (ProjectContextHolder.Current != null &&
+                !string.IsNullOrEmpty(
+                    ProjectContextHolder.Current.ProjectFolderPath) &&
+                string.Equals(ProjectContextHolder.Current.ProjectName,
+                    projectName, System.StringComparison.OrdinalIgnoreCase))
+            {
+                path = ProjectContextHolder.Current.ProjectFolderPath +
+                    fileName;
+            }
+            else
+            {
+                path = GetPtusaProjectsPath(projectName) + projectName +
+                    fileName;
+            }
 
             try
             {
@@ -211,6 +235,37 @@ namespace EasyEPlanner
         /// Путь к файлам .lua (к проекту)
         /// </summary>
         /// <returns></returns>
+        /// <summary>
+        /// Первый сконфигурированный каталог с проектами (folder_path)
+        /// без поиска конкретного проекта и без вывода MessageBox.
+        /// Используется, например, как стартовая папка диалога выбора
+        /// проекта в standalone-приложении.
+        /// </summary>
+        [ExcludeFromCodeCoverage]
+        public string GetDefaultProjectsRootPath()
+        {
+            try
+            {
+                string path = Path.Combine(OriginalAssemblyPath,
+                    StaticHelper.CommonConst.ConfigFileName);
+                if (!File.Exists(path))
+                    return "";
+
+                PInvoke.IniFile iniFile = new PInvoke.IniFile(path);
+                string firstPath = iniFile
+                    .ReadString("path", "folder_path", "")
+                    .Split(';')
+                    .FirstOrDefault(p => !string.IsNullOrEmpty(p) &&
+                        Directory.Exists(p));
+
+                return firstPath ?? "";
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
         [ExcludeFromCodeCoverage]
         public string GetPtusaProjectsPath(string projectName)
         {
@@ -249,16 +304,23 @@ namespace EasyEPlanner
                 if (!string.IsNullOrEmpty(projectsFolderArray.FirstOrDefault()))
                     return projectsFolderArray.FirstOrDefault() + '\\';
 
-                MessageBox.Show("Путь к каталогу с проектами не найден.\n" +
-                    "Пожалуйста, проверьте конфигурацию!", "Внимание",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (!isStandalone)
+                {
+                    MessageBox.Show("Путь к каталогу с проектами не найден.\n" +
+                        "Пожалуйста, проверьте конфигурацию!", "Внимание",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
             catch
             {
-                MessageBox.Show("Файл конфигурации не найден - будет создан " +
-                    "новый со стандартным описанием. Пожалуйста, измените " +
-                    "путь к каталогу с проектами, где хранятся Lua файлы!",
-                    "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                if (!isStandalone)
+                {
+                    MessageBox.Show("Файл конфигурации не найден - будет " +
+                        "создан новый со стандартным описанием. Пожалуйста, " +
+                        "измените путь к каталогу с проектами, где хранятся " +
+                        "Lua файлы!", "Внимание", MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                }
             }
             return "";
         }
@@ -308,7 +370,141 @@ namespace EasyEPlanner
             deviceManager = DeviceManager.GetInstance();
             projectConfiguration = ProjectConfiguration.GetInstance();
             eProjectManager = EProjectManager.GetInstance();
+            ProjectContextHolder.Current = new EplanProjectContext();
             LoadBaseTechObjectsFromFiles();
+        }
+
+        /// <summary>
+        /// Инициализация для standalone-приложения (без EPLAN).
+        /// </summary>
+        public void InitStandalone(IProjectContext context)
+        {
+            ProjectContextHolder.Current = context;
+            standaloneOriginalAssemblyPath = context?.OriginalAssemblyPath
+                ?? AssemblyPath;
+            isStandalone = true;
+
+            // Editor создаётся лениво в StartEditInHost — его конструктор
+            // тяжёлый и не нужен до открытия проекта.
+            techObjectManager = TechObjectManager.GetInstance();
+            Logs.Init(new LogFrm());
+            ioManager = IO.IOManager.GetInstance();
+            deviceManager = DeviceManager.GetInstance();
+            // ProjectConfiguration / EProjectManager не инициализируем —
+            // они требуют рантайм EPLAN.
+            LoadBaseTechObjectsFromFiles();
+        }
+
+        /// <summary>
+        /// Режим standalone App (без рантайма EPLAN).
+        /// </summary>
+        public bool IsStandalone => isStandalone;
+
+        /// <summary>
+        /// Открыть редактор в указанном хосте (standalone Form).
+        /// </summary>
+        public void StartEditInHost(System.Windows.Forms.Control host)
+        {
+            editor = Editor.Editor.GetInstance();
+            editor.OpenEditor(techObjectManager as Editor.ITreeViewItem, host);
+        }
+
+        /// <summary>
+        /// Загрузить технологические объекты и ограничения из папки проекта.
+        /// </summary>
+        public int LoadTechObjectsFromContext(out string errStr)
+        {
+            errStr = string.Empty;
+            var context = ProjectContextHolder.Current;
+            if (context == null ||
+                string.IsNullOrEmpty(context.ProjectFolderPath))
+            {
+                errStr = "Контекст проекта не задан.";
+                return 1;
+            }
+
+            EncodingDetector.MainFilesEncoding = null;
+            string projectName = context.ProjectName;
+            int res = 0;
+            string thrown = string.Empty;
+
+            res += LoadDescriptionFromFile(out string objectsLua,
+                out string objectsErrors, projectName,
+                $"\\{ProjectDescriptionSaver.MainTechObjectsFileName}");
+            thrown += objectsErrors;
+            techObjectManager.LoadDescription(objectsLua, projectName);
+            techObjectManager.GenericTechObjects.ForEach(obj => obj.Update());
+
+            res += LoadDescriptionFromFile(out string restrictionsLua,
+                out string restrictionsErrors, projectName,
+                $"\\{ProjectDescriptionSaver.MainRestrictionsFileName}");
+            thrown += restrictionsErrors;
+            techObjectManager.LoadRestrictions(restrictionsLua);
+
+            errStr = thrown;
+            return res;
+        }
+
+        /// <summary>
+        /// Сохранить объекты, ограничения и main.io.lua текущего контекста.
+        /// </summary>
+        public void SaveTechObjectsFromContext(bool silentMode = true)
+        {
+            var context = ProjectContextHolder.Current;
+            if (context == null ||
+                string.IsNullOrEmpty(context.ProjectFolderPath))
+            {
+                return;
+            }
+
+            bool showLog = !silentMode && !Logs.IsNull();
+            if (showLog)
+            {
+                Logs.Show();
+                Logs.DisableButtons();
+                Logs.SetProgress(0);
+            }
+
+            bool hasError = false;
+            try
+            {
+                ProjectDescriptionSaver.SaveTechObjectsAndRestrictions(
+                    context.ProjectName, context.ProjectFolderPath, silentMode);
+                ProjectDescriptionSaver.SaveMainIoFile(
+                    context.ProjectName, context.ProjectFolderPath, silentMode);
+            }
+            catch (Exception ex)
+            {
+                hasError = true;
+                if (showLog)
+                {
+                    Logs.AddMessage("Ошибка сохранения - " + ex);
+                    Logs.ShowLastLine();
+                }
+                else
+                {
+                    MessageBox.Show("Ошибка сохранения:\n" + ex.Message,
+                        "Сохранение", MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                }
+            }
+            finally
+            {
+                if (showLog)
+                {
+                    Logs.EnableButtons();
+                    Logs.SetProgress(100);
+                }
+            }
+
+            // Сообщение об успехе — только если в текущем сохранении
+            // не было ошибок (иначе лог вводил бы в заблуждение).
+            if (showLog && !hasError)
+            {
+                Logs.AddMessage($"Проект \"{context.ProjectName}\" " +
+                    "сохранен.");
+                Logs.ShowLastLine();
+            }
         }
 
         /// <summary>
@@ -561,7 +757,20 @@ namespace EasyEPlanner
         [ExcludeFromCodeCoverage]
         public void RemoveHighLighting(bool isClosingProject = false)
         {
-            foreach (var drawedObject in highlightedObjects.OfType<Eplan.EplApi.DataModel.Graphics.GraphicalPlacement>())
+            if (isStandalone)
+            {
+                highlightedObjects.Clear();
+                return;
+            }
+
+            RemoveHighLightingEplan(isClosingProject);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void RemoveHighLightingEplan(bool isClosingProject)
+        {
+            foreach (var drawedObject in highlightedObjects
+                .OfType<Eplan.EplApi.DataModel.Graphics.GraphicalPlacement>())
             {
                 if (isClosingProject)
                 {
@@ -587,6 +796,17 @@ namespace EasyEPlanner
         /// <param name="objectsToDraw"></param>
         [ExcludeFromCodeCoverage]
         public void SetHighlighting(List<Editor.DrawInfo> objectsToDraw)
+        {
+            if (isStandalone || objectsToDraw == null)
+            {
+                return;
+            }
+
+            SetHighlightingEplan(objectsToDraw);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void SetHighlightingEplan(List<Editor.DrawInfo> objectsToDraw)
         {
             foreach (Editor.DrawInfo drawObj in objectsToDraw.Where(o => o.DrawingStyle != Editor.DrawInfo.Style.NO_DRAW ))
             {
@@ -838,9 +1058,42 @@ namespace EasyEPlanner
 
         /// <summary>
         /// Путь к надстройке, к месту, из которого она подключалась к программе
-        /// инженером.
+        /// инженером (или к сборке standalone App).
         /// </summary>
-        public string OriginalAssemblyPath => Path.GetDirectoryName(AddInModule.OriginalAssemblyPath);
+        /// <remarks>
+        /// AddInModule нельзя читать в этом же методе: JIT подтянет
+        /// Eplan.EplApi.AFu даже если ветка не выполняется (standalone).
+        /// </remarks>
+        public string OriginalAssemblyPath
+        {
+            get
+            {
+                string fromContext = ProjectContextHolder.Current
+                    ?.OriginalAssemblyPath;
+                if (!string.IsNullOrEmpty(fromContext))
+                {
+                    return fromContext;
+                }
+
+                if (!string.IsNullOrEmpty(standaloneOriginalAssemblyPath))
+                {
+                    return standaloneOriginalAssemblyPath;
+                }
+
+                return GetEplanOriginalAssemblyPath();
+            }
+        }
+
+        /// <summary>
+        /// Путь из EPLAN AddInModule (только внутри EPLAN).
+        /// NoInlining — чтобы тип AddInModule не грузился при JIT
+        /// геттера OriginalAssemblyPath в standalone.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static string GetEplanOriginalAssemblyPath()
+        {
+            return Path.GetDirectoryName(AddInModule.OriginalAssemblyPath);
+        }
 
         /// <summary>
         /// Название папки с системными скриптами
@@ -866,11 +1119,18 @@ namespace EasyEPlanner
 
         /// <summary>
         /// Путь к системным файлам Lua в теневом хранилище Eplan
+        /// (или из контекста standalone App).
         /// </summary>
         public string SystemFilesPath 
         {
             get
             {
+                if (!string.IsNullOrEmpty(
+                    ProjectContextHolder.Current?.SystemFilesPath))
+                {
+                    return ProjectContextHolder.Current.SystemFilesPath;
+                }
+
                 return Path.Combine(AssemblyPath, luaFolder);
             }
         }
@@ -882,6 +1142,22 @@ namespace EasyEPlanner
         {
             get
             {
+                // Standalone: один каталог Lua из FileProjectContext.
+                // В EPLAN Current.SystemFilesPath указывает на ShadowCopy —
+                // его нельзя использовать как «исходный» путь (описания
+                // базовых объектов лежат только рядом с надстройкой).
+                if (isStandalone && !string.IsNullOrEmpty(
+                    ProjectContextHolder.Current?.SystemFilesPath))
+                {
+                    return ProjectContextHolder.Current.SystemFilesPath;
+                }
+
+                if (!string.IsNullOrEmpty(standaloneOriginalAssemblyPath))
+                {
+                    return Path.Combine(standaloneOriginalAssemblyPath,
+                        luaFolder);
+                }
+
                 return Path.Combine(OriginalAssemblyPath, luaFolder);
             }
         }
@@ -897,6 +1173,13 @@ namespace EasyEPlanner
                 return Path.Combine(OriginalAssemblyPath, cmdScriptsFolder);
             }
         }
+
+        /// <summary>
+        /// Путь сборки, заданный InitStandalone (без обращения к AddInModule).
+        /// </summary>
+        private string standaloneOriginalAssemblyPath;
+
+        private bool isStandalone;
 
         private ProjectManager() { }
 
