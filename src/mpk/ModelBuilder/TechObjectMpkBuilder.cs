@@ -24,11 +24,14 @@ namespace EasyEPlanner.mpk.ModelBuilder
         public IContainer Build()
         {
             var objects = techObjectManager.TechObjects
-                .Select(to => to.NameBC)
-                .Select(bcn => Regex.Replace(bcn, @"\d+$", "", RegexOptions.None, TimeSpan.FromMilliseconds(100)))
-                .Distinct()
-                .Where(bcn => bcn != "")
-                .ToDictionary(bcn => bcn, bcn => techObjectManager.TechObjects.Find(to => to.NameBC.Contains(bcn)));
+                .Select(to => new
+                {
+                    ChannelBaseName = Regex.Replace(to.GetNameForChannelBase(), @"\d+$", "", RegexOptions.None, TimeSpan.FromMilliseconds(100)),
+                    TechObject = to,
+                })
+                .Where(item => item.ChannelBaseName != "")
+                .GroupBy(item => item.ChannelBaseName)
+                .ToDictionary(group => group.Key, group => group.First().TechObject);
             var container = new Container()
             {
                 Name = containerName,

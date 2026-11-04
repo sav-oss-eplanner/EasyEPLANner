@@ -612,16 +612,12 @@ namespace TechObject
 
         /// <summary>
         /// Получить сгенерированное имя объекта Monitor для базы каналов
-        /// и отчётов. Если имя объекта содержит "Obj", оно не изменяется,
-        /// иначе к имени добавляется номер объекта и суффикс "Obj".
+        /// и отчётов: к заданному в базовом объекте имени добавляется номер
+        /// технологического объекта.
         /// </summary>
         public string GetNameForChannelBase()
         {
-            if (NameBC.IndexOf("Obj", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                return NameBC;
-            }
-            return NameBC + TechNumber + "Obj";
+            return NameBC + TechNumber;
         }
 
         /// <summary>

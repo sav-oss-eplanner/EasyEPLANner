@@ -108,12 +108,12 @@ namespace EasyEplannerTests.TechObjectTest.ObjectsTreeTest.UniversalObjecsTest
             Assert.IsNull(techObject.Replace(0, 0));
         }
 
-        [TestCase("TankObj", 1, "TankObj")]
-        [TestCase("Line1Obj", 1, "Line1Obj")]
-        [TestCase("LineObj1", 1, "LineObj1")]
-        [TestCase("Line", 1, "Line1Obj")]
-        [TestCase("Line", 3, "Line3Obj")]
-        public void GetNameForChannelBase_NameWithObjIsNotChanged(
+        [TestCase("TankObj", 1, "TankObj1")]
+        [TestCase("LineInObj", 1, "LineInObj1")]
+        [TestCase("LineInObjX", 3, "LineInObjX3")]
+        [TestCase("LineObj1", 1, "LineObj11")]
+        [TestCase("", 2, "2")]
+        public void GetNameForChannelBase_AppendsTechNumber(
             string nameBC, int techNumber, string expected)
         {
             var techObject = new TechObject.TechObject("", GetN => 1,
