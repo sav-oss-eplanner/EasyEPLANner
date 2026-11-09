@@ -291,11 +291,10 @@ jobs:
       working-directory: ./EasyEPLANner
       run: |
         echo "changelog<<^D" >> $env:GITHUB_OUTPUT
-        $index = 1
         $logs = (git log --pretty=tformat:"%b" ((git tag --sort=committerdate | Select-Object -Last 2) -join "..")) -join "`n"
         foreach ($match in [Regex]::Matches($logs, '```ChangeLog\n?([\w\W]*?)\n?```')) {
-          echo "$index. $($match.Groups[1].Value.Trim().TrimEnd(';,.'))." >> $env:GITHUB_OUTPUT
-          $index = $index + 1
+          $change = ($match.Groups[1].Value -replace '\s+', ' ').Trim().TrimEnd(';,.')
+          echo "- $change." >> $env:GITHUB_OUTPUT
         }
         echo ^D >> $env:GITHUB_OUTPUT
 
@@ -312,11 +311,14 @@ jobs:
       with:
         name: ${{ github.ref_name }}
         body: |
-          **Список изменений**:
-          ```ChangeLog
-          Обновление от ${{ steps.get-date.outputs.date }}. Версия надстройки - ${{ steps.assembly-version.outputs.version }}.
+          ## Информация о релизе
+
+          - Дата сборки: ${{ steps.get-date.outputs.date }}
+          - Версия надстройки: ${{ steps.assembly-version.outputs.version }}
+
+          ## Список изменений
+
           ${{ steps.change-log.outputs.changelog }}
-          ```
         files: |
           ./bin/EasyEPLANner.zip
         generate_release_notes: true
