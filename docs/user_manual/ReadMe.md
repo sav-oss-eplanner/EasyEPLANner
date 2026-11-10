@@ -1433,6 +1433,7 @@ ProjectTestEnabled=True
 | PT           | E&H.PMP23-CA7N1KB3CJ                                   | 4             | 0              |
 | LT           | IFM.LR2750                                             | 2             | 0              |
 | TE           | IFM.TA2502                                             | 2             | 0              |
+| TE           | IFM.TA2512                                             | 2             | 0              |
 | TE           | IFM.TA2532                                             | 2             | 0              |
 | TE           | IFM.TA2535                                             | 2             | 0              |
 | TE           | IFM.TA2435                                             | 2             | 0              |
