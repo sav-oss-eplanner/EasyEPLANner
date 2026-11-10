@@ -28,6 +28,7 @@ namespace TechObject
             BaseProperties = new BaseProperties();
             Deprecated = false;
             DenyBindingToUnit = false;
+            IsSingleInstance = false;
 
             objectGroups = new List<AttachedObjects>();
         }
@@ -415,6 +416,7 @@ namespace TechObject
             cloned.BaseProperties = BaseProperties.Clone();
 
             cloned.DenyBindingToUnit = DenyBindingToUnit;
+            cloned.IsSingleInstance = IsSingleInstance;
 
             return cloned;
         }
@@ -531,6 +533,14 @@ namespace TechObject
         /// Агрегату разрешена привязка к аппаратам
         /// </summary>
         public bool DenyBindingToUnit { get; set; }
+
+        /// <summary>
+        /// Разрешить только один экземпляр объекта в проекте.
+        /// Если true, второй экземпляр того же базового объекта
+        /// создавать нельзя. Задаётся в lua-описании базового
+        /// объекта полем isSingleInstance.
+        /// </summary>
+        public bool IsSingleInstance { get; set; }
 
         private List<BaseParameter> aggregateProperties;
         private List<AttachedObjects> objectGroups;

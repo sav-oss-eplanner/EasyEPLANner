@@ -201,12 +201,12 @@ namespace TechObject
             int s88Level, string basicName, string bindingName, bool isPID,
             string luaModuleName, string monitorName, bool deprecated,
             bool denyBindingToUnit, int techType = 2,
-            string defaultNameEplan = "TANK")
+            string defaultNameEplan = "TANK", bool isSingleInstance = false)
         {
             return baseTechObjectManager.AddBaseObject(name, eplanName,
                 s88Level, basicName, bindingName, isPID, luaModuleName,
                 monitorName, deprecated, denyBindingToUnit, techType,
-                defaultNameEplan);
+                defaultNameEplan, isSingleInstance);
         }
 
         public void AddPackage(string package)
