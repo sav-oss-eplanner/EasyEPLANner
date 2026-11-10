@@ -108,12 +108,26 @@ namespace EasyEplannerTests.TechObjectTest.ObjectsTreeTest.UniversalObjecsTest
             Assert.IsNull(techObject.Replace(0, 0));
         }
 
+        [Test]
+        public void UpdateOnGenericTechObject_DoesNotAppendTechNumberWhenMonitorNameContainsDigit()
+        {
+            var genericTechObject = new GenericTechObject("generic", 2, "", -1,
+                "Monitor7", "", null);
+            var techObject = new TechObject.TechObject("object", GetN => 1,
+                3, 2, "", -1, "Monitor", "", null);
+
+            techObject.UpdateOnGenericTechObject(genericTechObject);
+
+            Assert.AreEqual("Monitor7", techObject.NameBC);
+        }
+
         [TestCase("TankObj", 1, "TankObj1")]
         [TestCase("LineInObj", 1, "LineInObj1")]
         [TestCase("LineInObjX", 3, "LineInObjX3")]
-        [TestCase("LineObj1", 1, "LineObj11")]
+        [TestCase("LineObj1", 1, "LineObj1")]
+        [TestCase("Line2Obj", 5, "Line2Obj")]
         [TestCase("", 2, "2")]
-        public void GetNameForChannelBase_AppendsTechNumber(
+        public void GetNameForChannelBase_AddsTechNumberOnlyWhenNameHasNoDigits(
             string nameBC, int techNumber, string expected)
         {
             var techObject = new TechObject.TechObject("", GetN => 1,
