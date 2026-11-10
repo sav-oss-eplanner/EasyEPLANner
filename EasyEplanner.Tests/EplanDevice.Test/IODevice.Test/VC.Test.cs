@@ -139,6 +139,7 @@ namespace Tests.EplanDevices
                 {IODevice.Tag.NAMUR_ST, 1},
                 {IODevice.Tag.OPENED, 1},
                 {IODevice.Tag.CLOSED, 1},
+                {IODevice.Parameter.P_FB, 1},
             };
 
             return new object[]
@@ -193,7 +194,7 @@ namespace Tests.EplanDevices
                 },
                 new object[]
                 {
-                    new string[0],
+                    new string[] { IODevice.Parameter.P_FB },
                     VC_IOLINK,
                     GetRandomVCDevice()
                 },
