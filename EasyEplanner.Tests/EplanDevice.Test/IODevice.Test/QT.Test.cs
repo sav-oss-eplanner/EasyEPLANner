@@ -141,7 +141,8 @@ namespace Tests.EplanDevices
                 {IODevice.Tag.V, 1},
                 {IODevice.Tag.P_CZ, 1},
                 {IODevice.Tag.T, 1},
-                {IODevice.Parameter.P_ERR, 1}
+                {IODevice.Parameter.P_ERR, 1},
+                {IODevice.Parameter.P_MAX_V, 1}
             };
 
             var exportForQTOk = new Dictionary<ITag, int>()
@@ -255,7 +256,8 @@ namespace Tests.EplanDevices
 
             var iolinkParameters = new string[]
             {
-                IODevice.Parameter.P_ERR
+                IODevice.Parameter.P_ERR,
+                IODevice.Parameter.P_MAX_V
             };
 
             return new object[]
