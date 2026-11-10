@@ -88,6 +88,13 @@ namespace TechObject
         int GetTechObjectN(string baseObjectName, string nameEplan, int techNumber);
 
         /// <summary>
+        /// Получить номер объекта по названию базового объекта и тех. номеру
+        /// </summary>
+        /// <param name="baseObjectName"> Название базового объекта </param>
+        /// <param name="techNumber"> тех. номер </param>
+        int GetTechObjectN(string baseObjectName, int techNumber);
+
+        /// <summary>
         /// Получить номер объекта по названию базового объекта, тех. типу и тех. номеру
         /// </summary>
         /// <param name="baseObjectName"> Название базового объекта </param>
@@ -110,6 +117,12 @@ namespace TechObject
         /// </summary>
         /// <param name="importingObject">Объект для импорта</param>
         void ImportObject(TechObject importingObject);
+
+        /// <summary>
+        /// Восстановить привязанные агрегаты по переносимым ссылкам.
+        /// </summary>
+        void ApplyAttachedObjectsReferences(
+            IEnumerable<TechObject> objects = null);
 
         /// <summary>
         /// Получить описание объектов для базы каналов

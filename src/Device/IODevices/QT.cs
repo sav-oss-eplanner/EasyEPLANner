@@ -45,6 +45,7 @@ namespace EplanDevice
 
                 case "QT_IOLINK":
                     parameters.Add(Parameter.P_ERR, null);
+                    parameters.Add(Parameter.P_MAX_V, null);
 
                     AI.Add(new IOChannel("AI", -1, -1, -1, ""));
 
@@ -164,6 +165,7 @@ namespace EplanDevice
                                 {Tag.P_CZ, 1},
                                 {Tag.T, 1},
                                 {Parameter.P_ERR, 1},
+                                {Parameter.P_MAX_V, 1},
                             };
 
                         case DeviceSubType.QT_VIRT:
