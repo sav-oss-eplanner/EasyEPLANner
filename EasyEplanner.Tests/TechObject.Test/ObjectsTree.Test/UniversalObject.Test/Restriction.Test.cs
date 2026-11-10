@@ -17,7 +17,7 @@ namespace TechObjectTests
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
             instance.SetValue(null, null);
 
-            var techObject = TechObjectManager.GetInstance().AddObject(1, 1, "TANK", 2, "TANK", -1, "", "", "", -1, false);
+            var techObject = TechObjectManager.GetInstance().AddObject(1, 1, "TANK", 2, "TANK", -1, "", "", "", "", -1, false);
 
             techObject.ModesManager.AddMode("mode 1", "");
             techObject.ModesManager.AddMode("mode 2", "");

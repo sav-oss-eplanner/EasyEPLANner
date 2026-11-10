@@ -114,7 +114,8 @@ namespace TechObject
         /// <param name="prefix">Префикс (для выравнивания).</param>
         /// <param name="globalNum">Глобальный номер объекта</param>
         /// <returns>Описание в виде таблицы Lua.</returns>
-        public string SaveAsLuaTable(string prefix, int globalNum)
+        public string SaveAsLuaTable(string prefix, int globalNum,
+            string exportAttachedObjectsRefs = null)
         {
             string baseObjectName = "";
             if (baseTechObject != null)
@@ -126,6 +127,9 @@ namespace TechObject
                 $"{prefix}base_tech_object = '{baseObjectName}',\n";
             string attached_objects_str = (string.IsNullOrEmpty(AttachedObjects.Value)) ? string.Empty :
                 $"{prefix}{AttachedObjects.WorkStrategy.LuaName} = '{AttachedObjects.Value}',\n";
+            string attached_objects_refs_str = string.IsNullOrEmpty(exportAttachedObjectsRefs) ?
+                string.Empty :
+                $"{prefix}{AttachedObjectReferences.LuaFieldName} = '{exportAttachedObjectsRefs}',\n";
 
             StringBuilder resultBuilder = new StringBuilder();
             resultBuilder.Append($"\t[ {globalNum} ] =\n")
@@ -137,7 +141,8 @@ namespace TechObject
                 .Append(prefix).Append($"name_BC    = '{NameBC}',\n")
                 .Append(prefix).Append($"cooper_param_number = {CooperParamNumber},\n")
                 .Append(base_tech_object_str)
-                .Append(attached_objects_str);
+                .Append(attached_objects_str)
+                .Append(attached_objects_refs_str);
 
             if (GenericTechObject != null)
             {
@@ -590,6 +595,12 @@ namespace TechObject
                 return Convert.ToInt32(techType.EditText[1]);
             }
         }
+
+        /// <summary>
+        /// Переносимые ссылки на привязанные агрегаты (base:n).
+        /// Используются только при экспорте/импорте объектов.
+        /// </summary>
+        public string AttachedObjectsRefs { get; set; } = string.Empty;
 
         /// <summary>
         /// Привязанные к аппарату агрегаты.
