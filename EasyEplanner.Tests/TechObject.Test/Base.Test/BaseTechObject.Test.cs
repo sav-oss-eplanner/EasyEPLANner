@@ -37,6 +37,7 @@ namespace Tests.TechObject
                 Assert.IsEmpty(obj.LuaModuleName);
                 Assert.AreEqual(zeroValue, obj.BaseProperties.Count);
                 Assert.IsFalse(obj.Deprecated);
+                Assert.IsFalse(obj.IsSingleInstance);
             });
         }
 
@@ -318,6 +319,7 @@ namespace Tests.TechObject
             bool expectedIsPID = true;
             string expectedLuaModuleName = "LuaModuleName";
             bool expectedDeprecated = false;
+            bool expectedIsSingleInstance = true;
 
             var obj = new BaseTechObject();
             obj.Name = expectedName;
@@ -328,6 +330,7 @@ namespace Tests.TechObject
             obj.IsPID = expectedIsPID;
             obj.LuaModuleName = expectedLuaModuleName;
             obj.Deprecated = expectedDeprecated;
+            obj.IsSingleInstance = expectedIsSingleInstance;
 
             // null - is Owner, dependency
             var clonedObj = obj.Clone(null);
@@ -343,6 +346,7 @@ namespace Tests.TechObject
                 Assert.AreEqual(expectedIsPID, clonedObj.IsPID);
                 Assert.AreEqual(expectedLuaModuleName, clonedObj.LuaModuleName);
                 Assert.AreEqual(expectedDeprecated, clonedObj.Deprecated);
+                Assert.AreEqual(expectedIsSingleInstance, clonedObj.IsSingleInstance);
             });
         }
 

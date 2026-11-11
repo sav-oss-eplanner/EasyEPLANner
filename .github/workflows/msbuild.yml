@@ -68,6 +68,8 @@ jobs:
     runs-on: windows-latest
     needs: check
     if: needs.check.outputs.result == 'success'
+    outputs:
+      artifact_url: ${{ steps.upload-artifact.outputs.artifact-url }}
     permissions:
       contents: read
       pull-requests: read
@@ -173,12 +175,77 @@ jobs:
         del EplanBaseNetu.dll
         del Microsoft.mshtml.dll
 
-    - name: Upload artifact    
+    - name: Upload artifact
+      id: upload-artifact
       uses: actions/upload-artifact@v7
       with:
         name: EasyEPLANner
         path: src/bin/${{env.BUILD_CONFIGURATION}}
     
+
+  # --------------------
+  # Publish build on PR
+  # --------------------
+  publish-pr-build:
+    name: Publish PR build
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'pull_request_target' && needs.build.result == 'success'
+    permissions:
+      pull-requests: write
+
+    steps:
+    - name: Create or update PR build comment
+      shell: pwsh
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_API_URL: ${{ github.api_url }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        PR_SHA: ${{ github.event.pull_request.head.sha }}
+        ARTIFACT_URL: ${{ needs.build.outputs.artifact_url }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        $headers = @{
+          Authorization = "Bearer $env:GITHUB_TOKEN"
+          Accept = "application/vnd.github+json"
+          'X-GitHub-Api-Version' = '2022-11-28'
+        }
+        $marker = '<!-- easy-eplanner-pr-build -->'
+        $body = @"
+        ## 📦 Сборка pull request #$env:PR_NUMBER
+
+        - Коммит: $env:PR_SHA
+        - Архив: [Скачать сборку]($env:ARTIFACT_URL)
+        - [Запуск сборки]($env:RUN_URL)
+
+        $marker
+        "@
+        $comments = @()
+        $page = 1
+        do {
+          $pageComments = Invoke-RestMethod -Method Get `
+            -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/issues/$env:PR_NUMBER/comments?per_page=100&page=$page" `
+            -Headers $headers
+          $comments += $pageComments
+          $page++
+        } while ($pageComments.Count -eq 100)
+
+        $existingComment = $comments |
+          Where-Object { $_.user.login -eq 'github-actions[bot]' -and $_.body.Contains($marker) } |
+          Select-Object -First 1
+        $payload = @{ body = $body } | ConvertTo-Json
+        if ($existingComment) {
+          Invoke-RestMethod -Method Patch `
+            -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/issues/comments/$($existingComment.id)" `
+            -Headers $headers -ContentType 'application/json' -Body $payload | Out-Null
+        }
+        else {
+          Invoke-RestMethod -Method Post `
+            -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/issues/$env:PR_NUMBER/comments" `
+            -Headers $headers -ContentType 'application/json' -Body $payload | Out-Null
+        }
+
   # --------------------
   # Release on tags
   # --------------------
@@ -224,11 +291,10 @@ jobs:
       working-directory: ./EasyEPLANner
       run: |
         echo "changelog<<^D" >> $env:GITHUB_OUTPUT
-        $index = 1
         $logs = (git log --pretty=tformat:"%b" ((git tag --sort=committerdate | Select-Object -Last 2) -join "..")) -join "`n"
         foreach ($match in [Regex]::Matches($logs, '```ChangeLog\n?([\w\W]*?)\n?```')) {
-          echo "$index. $($match.Groups[1].Value.Trim().TrimEnd(';,.'))." >> $env:GITHUB_OUTPUT
-          $index = $index + 1
+          $change = ($match.Groups[1].Value -replace '\s+', ' ').Trim().TrimEnd(';,.')
+          echo "- $change." >> $env:GITHUB_OUTPUT
         }
         echo ^D >> $env:GITHUB_OUTPUT
 
@@ -245,11 +311,14 @@ jobs:
       with:
         name: ${{ github.ref_name }}
         body: |
-          **Список изменений**:
-          ```ChangeLog
-          Обновление от ${{ steps.get-date.outputs.date }}. Версия надстройки - ${{ steps.assembly-version.outputs.version }}.
+          ## Информация о релизе
+
+          - Дата сборки: ${{ steps.get-date.outputs.date }}
+          - Версия надстройки: ${{ steps.assembly-version.outputs.version }}
+
+          ## Список изменений
+
           ${{ steps.change-log.outputs.changelog }}
-          ```
         files: |
           ./bin/EasyEPLANner.zip
         generate_release_notes: true

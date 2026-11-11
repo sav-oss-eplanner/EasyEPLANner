@@ -26,6 +26,7 @@ namespace TechObject
             errors += ObjectsFieldEquality(new TypeFieldEqualStrategy());
             errors += ObjectsFieldEquality(new MonitorFieldEqualStrategy());
             errors += ObjectsFieldEquality(new EplanNameFieldEqualStrategy());
+            errors += SingleInstanceViolation();
 
             foreach (var obj in techObjectManager.GenericTechObjects)
             {
@@ -62,6 +63,27 @@ namespace TechObject
 
             errorsList = errorsList.Distinct().ToList();
             return string.Join("", errorsList);
+        }
+
+        private string SingleInstanceViolation()
+        {
+            var violations = techObjectManager.TechObjects
+                .Where(o => o.BaseTechObject?.IsSingleInstance == true)
+                .GroupBy(o => o.BaseTechObject.EplanName)
+                .Where(g => g.Count() > 1)
+                .Select(g => $"Базовый объект \"{g.First().BaseTechObject.Name}\" " +
+                    $"({g.Key}) допускает только один экземпляр, " +
+                    $"создано: {g.Count()} (объекты №{string.Join(", №", g.Select(o => techObjectManager.GetTechObjectN(o)))})\n");
+
+            var genericViolations = techObjectManager.GenericTechObjects
+                .Where(o => o.BaseTechObject?.IsSingleInstance == true)
+                .GroupBy(o => o.BaseTechObject.EplanName)
+                .Where(g => g.Count() > 1)
+                .Select(g => $"Базовый объект \"{g.First().BaseTechObject.Name}\" " +
+                    $"({g.Key}) допускает только один типовой экземпляр, " +
+                    $"создано: {g.Count()} (типовые объекты №{string.Join(", №", g.Select(o => techObjectManager.GetGenericObjectN(o)))})\n");
+
+            return string.Join("", violations.Concat(genericViolations));
         }
 
         private ITechObjectManager techObjectManager;
