@@ -40,6 +40,7 @@ local iolink_devices =
     { articleName = "IFM.LR2750", sizeIn = 1, sizeOut = 0 },
     -- TE
     { articleName = "IFM.TA2502", sizeIn = 1, sizeOut = 0 },
+    { articleName = "IFM.TA2512", sizeIn = 1, sizeOut = 0 },
     { articleName = "IFM.TA2532", sizeIn = 1, sizeOut = 0 },
     { articleName = "IFM.TA2535", sizeIn = 1, sizeOut = 0 },
     { articleName = "IFM.TA2435", sizeIn = 1, sizeOut = 0 },
