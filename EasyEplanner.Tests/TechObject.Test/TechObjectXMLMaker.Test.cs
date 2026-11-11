@@ -70,7 +70,7 @@ namespace TechObjectTests
                 Assert.NotNull(system["SYSTEM.WATCHDOG_ERROR"]);
                 Assert.NotNull(system["SYSTEM.COMMUN_ERROR"]);
 
-                var tankObj = root["TankObj"];
+                var tankObj = root["TankObj1"];
                 Assert.AreEqual(11, tankObj.Channels.Count);
                 Assert.NotNull(tankObj["OBJECT1.CMD"]);
                 Assert.NotNull(tankObj["OBJECT1.ST[ 1 ]"]);
@@ -84,7 +84,7 @@ namespace TechObjectTests
                 Assert.NotNull(tankObj["OBJECT1.S_PAR_F[ 1 ]"]);
                 Assert.NotNull(tankObj["OBJECT1.S_PAR_F[ 2 ]"]);
 
-                Assert.AreEqual(2, root["PidNode2Obj"].Channels.Count);
+                Assert.AreEqual(2, root["PidNode2"].Channels.Count);
                 Assert.AreEqual(16, root["PID2"].Channels.Count);
             });
         }
