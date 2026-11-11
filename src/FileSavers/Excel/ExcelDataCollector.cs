@@ -177,7 +177,7 @@ namespace EasyEPlanner
                     techName, 
                     techObj.TechNumber.ToString(), 
                     techObj.NameEplan, 
-                    techObj.NameBC 
+                    techObj.GetNameForChannelBase() 
                 };
 
                 var modesNodes = new TreeNode("Операции");

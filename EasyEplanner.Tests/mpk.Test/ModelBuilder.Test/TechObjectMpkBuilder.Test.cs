@@ -77,5 +77,21 @@ namespace EasyEplannerTests.mpkTest.ModelBuilderTest
                 }, mpk.Components[1].Properties.Select(p => p.Name));
             });
         }
+
+        [Test]
+        public void BuildTest_DifferentObjectTypesWithSameNumberHaveSeparateComponents()
+        {
+            var tank = new TechObject.TechObject("Танк", getN => 1, 1, 2,
+                "TANK", -1, "TankObj", "", new BaseTechObject());
+            var line = new TechObject.TechObject("Линия", getN => 2, 1, 3,
+                "LINE", -1, "LineInObjX", "", new BaseTechObject());
+            var manager = Mock.Of<ITechObjectManager>(to =>
+                to.TechObjects == new List<TechObject.TechObject> { tank, line });
+
+            var mpk = new TechObjectMpkBuilder(manager, "container").Build();
+
+            CollectionAssert.AreEqual(new[] { "SYSTEM", "TankObj", "LineInObjX" },
+                mpk.Components.Select(component => component.Name));
+        }
     }
 }
