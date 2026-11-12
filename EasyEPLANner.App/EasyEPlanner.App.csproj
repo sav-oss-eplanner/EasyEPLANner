@@ -4,6 +4,7 @@
     <TargetFramework>net472</TargetFramework>
     <RootNamespace>EasyEPlanner.App</RootNamespace>
     <AssemblyName>EasyEPLANner</AssemblyName>
+    <PackageId>EasyEPlanner.App</PackageId>
     <AssemblyTitle>EasyEPLANner</AssemblyTitle>
     <Product>EasyEPLANner</Product>
     <ApplicationIcon>Assets\easyEPLANner.ico</ApplicationIcon>
