@@ -316,6 +316,22 @@ namespace Tests.TechObject
         }
 
         [Test]
+        public void AddBaseObject_GlobalTechNumberingGroup_SavesAndCopiesGroup()
+        {
+            IBaseTechObjectManager manager = BaseTechObjectManager.GetInstance();
+            manager.Objects.Clear();
+
+            manager.AddBaseObject("Auxiliary module", "aux_cip_module", 1,
+                "aux_cip_module", "", false, "", "", false, false,
+                2, "AUX_CIP", false, "CIP_MODULES");
+
+            var copy = manager.GetTechObjectCopy("aux_cip_module");
+
+            Assert.AreEqual("CIP_MODULES", manager.Objects.Single().GlobalTechNumberingGroup);
+            Assert.AreEqual("CIP_MODULES", copy.GlobalTechNumberingGroup);
+        }
+
+        [Test]
         public void GetTechObjectCopy_SingleInstanceObject_CopiesFlag()
         {
             IBaseTechObjectManager manager = BaseTechObjectManager

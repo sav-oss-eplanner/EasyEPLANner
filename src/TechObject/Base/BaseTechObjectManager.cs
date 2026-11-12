@@ -22,7 +22,8 @@ namespace TechObject
             int s88Level, string basicName, string bindingName, bool isPID,
             string luaModuleName, string monitorName, bool deprecated,
             bool denyBindingToUnit, int techType = 2,
-            string defaultNameEplan = "TANK", bool isSingleInstance = false);
+            string defaultNameEplan = "TANK", bool isSingleInstance = false,
+            string globalTechNumberingGroup = null);
 
         BaseTechObject GetTechObjectCopy(string name);
 
@@ -80,7 +81,8 @@ namespace TechObject
             int s88Level, string basicName, string bindingName, bool isPID,
             string luaModuleName, string monitorName, bool deprecated,
             bool denyBindingToUnit, int techType = 2,
-            string defaultNameEplan = "TANK", bool isSingleInstance = false)
+            string defaultNameEplan = "TANK", bool isSingleInstance = false,
+            string globalTechNumberingGroup = null)
         {
             var obj = new BaseTechObject
             {
@@ -96,7 +98,8 @@ namespace TechObject
                 DefaultNameEplan = defaultNameEplan,
                 Deprecated = deprecated,
                 DenyBindingToUnit = denyBindingToUnit,
-                IsSingleInstance = isSingleInstance
+                IsSingleInstance = isSingleInstance,
+                GlobalTechNumberingGroup = globalTechNumberingGroup ?? string.Empty
             };
 
             bool correctName = name != null && name.Trim() != string.Empty;

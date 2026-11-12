@@ -103,6 +103,14 @@ namespace TechObject
         int GetTechObjectN(string baseObjectName, int techType, int techNumber);
 
         /// <summary>
+        /// Получить новый технологический номер в локальной или глобальной серии.
+        /// </summary>
+        /// <param name="baseTechObject">Базовый технологический объект</param>
+        /// <param name="techType">Технологический тип</param>
+        /// <returns>Новый технологический номер</returns>
+        int GetNewTechNumber(BaseTechObject baseTechObject, int techType);
+
+        /// <summary>
         /// Получить номер смежного объекта: по типу целевого объекта и искомому тех.номеру
         /// </summary>
         /// <param name="targetObjectIndex">Целевой объект</param>

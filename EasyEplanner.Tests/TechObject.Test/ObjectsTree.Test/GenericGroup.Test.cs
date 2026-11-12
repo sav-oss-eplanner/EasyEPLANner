@@ -40,6 +40,12 @@ namespace TechObjectTests
 
             var techObjectManagerMock = new Mock<ITechObjectManager>();
             techObjectManagerMock.Setup(tom => tom.TechObjects).Returns(techObjects);
+            techObjectManagerMock.Setup(tom => tom.GetNewTechNumber(It.IsAny<BaseTechObject>(), It.IsAny<int>()))
+                .Returns<BaseTechObject, int>((numberingBaseObject, techType) => techObjects
+                    .Where(to => to.TechType == techType)
+                    .Select(to => to.TechNumber)
+                    .DefaultIfEmpty(0)
+                    .Max() + 1);
 
             var baseTechObject = new BaseTechObject()
             {
@@ -151,6 +157,12 @@ namespace TechObjectTests
 
             var techObjectManagerMock = new Mock<ITechObjectManager>();
             techObjectManagerMock.Setup(tom => tom.TechObjects).Returns(techObjects);
+            techObjectManagerMock.Setup(tom => tom.GetNewTechNumber(It.IsAny<BaseTechObject>(), It.IsAny<int>()))
+                .Returns<BaseTechObject, int>((numberingBaseObject, techType) => techObjects
+                    .Where(to => to.TechType == techType)
+                    .Select(to => to.TechNumber)
+                    .DefaultIfEmpty(0)
+                    .Max() + 1);
             var baseTechObject = new BaseTechObject()
             {
                 EplanName = "BTO",
@@ -187,6 +199,12 @@ namespace TechObjectTests
 
             var techObjectManagerMock = new Mock<ITechObjectManager>();
             techObjectManagerMock.Setup(tom => tom.TechObjects).Returns(techObjects);
+            techObjectManagerMock.Setup(tom => tom.GetNewTechNumber(It.IsAny<BaseTechObject>(), It.IsAny<int>()))
+                .Returns<BaseTechObject, int>((numberingBaseObject, techType) => techObjects
+                    .Where(to => to.TechType == techType)
+                    .Select(to => to.TechNumber)
+                    .DefaultIfEmpty(0)
+                    .Max() + 1);
             var baseTechObject = new BaseTechObject()
             {
                 EplanName = "BTO",
@@ -298,6 +316,12 @@ namespace TechObjectTests
 
             var techObjectManagerMock = new Mock<ITechObjectManager>();
             techObjectManagerMock.Setup(tom => tom.TechObjects).Returns(techObjects);
+            techObjectManagerMock.Setup(tom => tom.GetNewTechNumber(It.IsAny<BaseTechObject>(), It.IsAny<int>()))
+                .Returns<BaseTechObject, int>((numberingBaseObject, techType) => techObjects
+                    .Where(to => to.TechType == techType)
+                    .Select(to => to.TechNumber)
+                    .DefaultIfEmpty(0)
+                    .Max() + 1);
             var baseTechObject = new BaseTechObject()
             {
                 EplanName = "BTO",

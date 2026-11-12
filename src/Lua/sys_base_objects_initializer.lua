@@ -26,12 +26,13 @@ init_base_objects = function()
         local deprecated = value.deprecated or false
         local denyBindingToUnit = value.denyBindingToUnit or false
         local isSingleInstance = value.isSingleInstance or false
+        local globalTechNumberingGroup = value.globalTechNumberingGroup or ""
 
         -- Добавить базовый объект
         local baseObject = AddBaseObject(name, eplanName, s88Level,
             basicName, bindingName, isPid, luaModuleName, monitorName,
             deprecated, denyBindingToUnit, defaultTechType, defaultNameEplan,
-            isSingleInstance)
+            isSingleInstance, globalTechNumberingGroup)
 
         -- Добавить группы танков
         local objectGroups = value.objectGroups or { }
