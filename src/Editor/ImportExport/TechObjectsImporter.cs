@@ -55,10 +55,10 @@ namespace Editor
         /// </summary>
         private void LoadScriptsForImport()
         {
-            const string descriptionFileName = "sys.lua";
+            const string sysFileName = "sys.lua";
             string sysLuaPath = Path
-                .Combine(ProjectManager.GetInstance().SystemFilesPath, 
-                descriptionFileName);
+                .Combine(ProjectManager.GetInstance().SystemFilesPath,
+                sysFileName);
             lua.DoFile(sysLuaPath);
         }
 
@@ -100,10 +100,11 @@ namespace Editor
         /// <param name="NameBC">Имя монитор</param>
         /// <param name="baseTechObjectName">Базовый объект</param>
         /// <param name="attachedObjects">Привязанные агрегаты</param>
+        /// <param name="attachedObjectsRefs">Переносимые ссылки на агрегаты</param>
         public TechObject.TechObject LoadObjects(int globalNumber, int techN, 
             string name, int techType, string nameEplan, int cooperParamNumber, 
             string NameBC, string baseTechObjectName, string attachedObjects,
-            int genericTechObjectNumber, bool isGeneric)
+            string attachedObjectsRefs, int genericTechObjectNumber, bool isGeneric)
         {
             //Не используются для импорта:
             _ = genericTechObjectNumber;
@@ -115,6 +116,7 @@ namespace Editor
             TechObject.TechObject obj = new TechObject.TechObject(name, 
                 null, techN, techType, nameEplan.ToUpper(), 
                 cooperParamNumber, NameBC, attachedObjects, baseTechObject);
+            obj.AttachedObjectsRefs = attachedObjectsRefs ?? string.Empty;
 
             if (baseTechObject != null)
             {
@@ -244,11 +246,16 @@ namespace Editor
         /// <param name="checkedItems">Выбранные на дереве объекты</param>
         public void Import(List<ITreeViewItem> checkedItems)
         {
-            foreach(var item in checkedItems.OfType<TechObject.TechObject>())
+            var selectedObjects = checkedItems.OfType<TechObject.TechObject>()
+                .ToList();
+
+            foreach (var item in selectedObjects)
             {
                 techObjectManager.ImportObject(item);
                 item.ModesManager.ModifyRestrictObj(0, item.GlobalNum);
             }
+
+            techObjectManager.ApplyAttachedObjectsReferences(selectedObjects);
 
             (techObjectManager as ITreeViewItem).AddParent(null);
         }

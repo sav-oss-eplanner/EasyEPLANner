@@ -107,7 +107,14 @@ namespace Editor
             editorTView.CellRendererGetter =
                 (object rowObject, OLVColumn column) =>
                 {
-                    return (rowObject as ITreeViewItem)?.CellRenderer.ElementAtOrDefault(column.Index);
+                    // При поиске используем DefaultRenderer (подсветка найденного
+                    // текста), иначе CellRenderer Action/AttachedObjects его
+                    // перекрывает.
+                    if (!string.IsNullOrEmpty(searchText))
+                        return null;
+
+                    return (rowObject as ITreeViewItem)?.CellRenderer
+                        .ElementAtOrDefault(column.Index);
                 };
 
             // Делегат получения дочерних элементов

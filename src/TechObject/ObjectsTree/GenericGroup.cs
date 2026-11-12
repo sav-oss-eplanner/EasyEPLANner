@@ -67,12 +67,34 @@ namespace TechObject
 
         public override bool IsMoveable => true;
 
-        public override bool IsInsertableCopy => true;
+        public override bool IsInsertableCopy
+        {
+            get
+            {
+                if (baseObject?.BaseTechObject?.IsSingleInstance == true &&
+                    baseObject.Count > 0)
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
 
         public override ITreeViewItem InsertCopy(object obj)
         {
+            if (baseObject == null)
+                return null;
+
+            if (baseObject.BaseTechObject?.IsSingleInstance == true &&
+                baseObject.Count > 0)
+            {
+                var cutting = (obj as TechObject)?.MarkToCut == true;
+                if (!cutting)
+                    return null;
+            }
+
             var techObject = obj as TechObject;
-            
+
             if (techObject is null)
                 return null;
 
@@ -165,13 +187,30 @@ namespace TechObject
             return false;
         }
 
-        public override bool IsInsertable => true;
+        public override bool IsInsertable
+        {
+            get
+            {
+                if (baseObject?.BaseTechObject?.IsSingleInstance == true &&
+                    baseObject.Count > 0)
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
 
         /// <summary>
         /// Создание тех. объека на основе типового объекта
         /// </summary>
         public override ITreeViewItem Insert()
         {
+            if (baseObject?.BaseTechObject?.IsSingleInstance == true &&
+                baseObject.Count > 0)
+            {
+                return null;
+            }
+
             var techObject = genericTechObject.CreateTechObject(baseObject);
 
             techObject.AddParent(this);

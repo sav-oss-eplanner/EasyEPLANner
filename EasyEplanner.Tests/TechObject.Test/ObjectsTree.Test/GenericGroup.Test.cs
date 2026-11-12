@@ -207,6 +207,91 @@ namespace TechObjectTests
         }
 
         [Test]
+        public void Insert_SingleInstanceBaseObject_BlocksSecondInstance()
+        {
+            var techObjects = new List<TechObject.TechObject>();
+            var techObjectManagerMock = new Mock<ITechObjectManager>();
+            techObjectManagerMock.Setup(tom => tom.TechObjects).Returns(techObjects);
+
+            var baseTechObject = new BaseTechObject()
+            {
+                Name = "Главный модуль мойки",
+                EplanName = "main_cip_module",
+                S88Level = 2,
+                IsSingleInstance = true,
+            };
+            var baseObject = new BaseObject("main_cip_module", techObjectManagerMock.Object);
+            typeof(BaseObject).GetField("baseTechObject",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .SetValue(baseObject, baseTechObject);
+
+            var techObject = new TechObject.TechObject("Главный модуль мойки",
+                GetN => 1, 1, 2, "CIP_MODULE", -1, "", "", baseTechObject);
+
+            var genericGroup = new GenericGroup(techObject, baseObject, techObjectManagerMock.Object);
+
+            Assert.Multiple(() =>
+            {
+                Assert.IsTrue(genericGroup.IsInsertable);
+
+                var first = genericGroup.Insert();
+                Assert.IsNotNull(first);
+                Assert.AreEqual(1, genericGroup.InheritedTechObjects.Count);
+
+                Assert.IsFalse(genericGroup.IsInsertable);
+                var second = genericGroup.Insert();
+                Assert.IsNull(second);
+                Assert.AreEqual(1, genericGroup.InheritedTechObjects.Count);
+            });
+        }
+
+        [Test]
+        public void InsertCopy_SingleInstanceBaseObject_BlocksDuplicationButAllowsMove()
+        {
+            var techObjects = new List<TechObject.TechObject>();
+            var techObjectManagerMock = new Mock<ITechObjectManager>();
+            techObjectManagerMock.Setup(tom => tom.TechObjects).Returns(techObjects);
+
+            var baseTechObject = new BaseTechObject()
+            {
+                Name = "Главный модуль мойки",
+                EplanName = "main_cip_module",
+                S88Level = 2,
+                IsSingleInstance = true,
+            };
+            var baseObject = new BaseObject("main_cip_module", techObjectManagerMock.Object);
+            typeof(BaseObject).GetField("baseTechObject",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .SetValue(baseObject, baseTechObject);
+
+            var techObject1 = new TechObject.TechObject("Главный модуль мойки",
+                GetN => 1, 1, 2, "CIP_MODULE", -1, "", "", baseTechObject);
+            var techObject2 = new TechObject.TechObject("Главный модуль мойки",
+                GetN => 2, 2, 2, "CIP_MODULE", -1, "", "", baseTechObject);
+            techObjects.Add(techObject1);
+            techObjects.Add(techObject2);
+
+            var genericGroup = new GenericGroup(techObject1, baseObject, techObjectManagerMock.Object);
+            var first = genericGroup.Insert();
+
+            Assert.Multiple(() =>
+            {
+                Assert.IsNotNull(first);
+                Assert.IsFalse(genericGroup.IsInsertableCopy);
+
+                var copyResult = genericGroup.InsertCopy(techObject1);
+                Assert.IsNull(copyResult);
+                Assert.AreEqual(1, genericGroup.InheritedTechObjects.Count);
+
+                techObject2.AddParent(baseObject);
+                techObject2.MarkToCut = true;
+                var cutResult = genericGroup.InsertCopy(techObject2);
+                Assert.AreSame(techObject2, cutResult);
+                Assert.AreEqual(2, genericGroup.InheritedTechObjects.Count);
+            });
+        }
+
+        [Test]
         public void Move()
         {
             var techObjects = new List<TechObject.TechObject>();
