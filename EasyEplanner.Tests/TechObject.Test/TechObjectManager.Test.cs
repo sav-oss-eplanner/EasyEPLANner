@@ -230,18 +230,131 @@ namespace TechObjectTests
         }
 
         [Test]
-        public void GetNewTechNumber_ReturnsUniqueNumberAmongSameTechType()
+        public void GetNewTechNumber_UsesBaseObjectAndTechTypeForLocalNumbering()
         {
+            techObjects.Clear();
+
+            var tankBase = new BaseTechObject { Name = "Tank", EplanName = "TANK" };
+            var mixerBase = new BaseTechObject { Name = "Mixer", EplanName = "MIXER" };
+            var emptyBase = new BaseTechObject { Name = "Empty", EplanName = "EMPTY" };
+
+            techObjects.Add(new TechObject.TechObject("Tank 2", _ => 1, 2, 2,
+                "TANK_2", -1, "", "", tankBase));
+            techObjects.Add(new TechObject.TechObject("Tank 4", _ => 2, 4, 2,
+                "TANK_4", -1, "", "", tankBase.Clone()));
+            techObjects.Add(new TechObject.TechObject("Tank type 3", _ => 3, 7, 3,
+                "TANK_3", -1, "", "", tankBase));
+            techObjects.Add(new TechObject.TechObject("Mixer 15", _ => 1, 15, 2,
+                "MIXER_15", -1, "", "", mixerBase));
+
             Assert.Multiple(() =>
             {
-                Assert.AreEqual(2, techObjectManager.GetNewTechNumber(2));
-                Assert.AreEqual(2, techObjectManager.GetNewTechNumber(3));
-                Assert.AreEqual(2, techObjectManager.GetNewTechNumber(4));
-                Assert.AreEqual(1, techObjectManager.GetNewTechNumber(5));
-
-                techObjects.Add(new TechObject.TechObject("Танк", GetN => 4, 5, 2, "TANK", -1, "TANK5", "", null));
-                Assert.AreEqual(6, techObjectManager.GetNewTechNumber(2));
+                Assert.AreEqual(5, techObjectManager.GetNewTechNumber(tankBase, 2));
+                Assert.AreEqual(8, techObjectManager.GetNewTechNumber(tankBase, 3));
+                Assert.AreEqual(16, techObjectManager.GetNewTechNumber(mixerBase, 2));
+                Assert.AreEqual(1, techObjectManager.GetNewTechNumber(emptyBase, 2));
             });
+        }
+
+        [Test]
+        public void GetNewTechNumber_UsesGlobalGroupAndReservesNumberOneForSingleInstance()
+        {
+            var baseTechObjectManager = BaseTechObjectManager.GetInstance();
+            var originalBaseTechObjects = baseTechObjectManager.Objects.ToList();
+            var originalTechObjects = techObjects.ToList();
+
+            try
+            {
+                baseTechObjectManager.Objects.Clear();
+                techObjects.Clear();
+
+                baseTechObjectManager.AddBaseObject("Main CIP module",
+                    "main_cip_module", 1, "main_cip_module", "", false,
+                    "", "", false, false, 2, "MAIN_CIP", true,
+                    "CIP_MODULES");
+                baseTechObjectManager.AddBaseObject("Auxiliary CIP module",
+                    "aux_cip_module", 1, "aux_cip_module", "", false,
+                    "", "", false, false, 2, "AUX_CIP", false,
+                    "CIP_MODULES");
+                baseTechObjectManager.AddBaseObject("Other module",
+                    "other_module", 1, "other_module", "", false,
+                    "", "", false, false, 2, "OTHER", false,
+                    "OTHER_MODULES");
+
+                var main = baseTechObjectManager.GetTechObjectCopy("main_cip_module");
+                var auxiliary = baseTechObjectManager.GetTechObjectCopy("aux_cip_module");
+                var other = baseTechObjectManager.GetTechObjectCopy("other_module");
+
+                Assert.AreEqual(1, techObjectManager.GetNewTechNumber(main, 2));
+                Assert.AreEqual(2, techObjectManager.GetNewTechNumber(auxiliary, 2),
+                    "The singleton reserves number 1 even before it is instantiated.");
+                Assert.AreEqual(1, techObjectManager.GetNewTechNumber(other, 2));
+                Assert.AreEqual(1, techObjectManager.GetNewTechNumber(auxiliary, 3),
+                    "Number sequences are independent by TechType.");
+
+                techObjects.Add(new TechObject.TechObject("Main CIP module",
+                    _ => 1, 1, 2, "MAIN_CIP", -1, "", "", main));
+                Assert.AreEqual(2, techObjectManager.GetNewTechNumber(auxiliary, 2));
+
+                techObjects.Add(new TechObject.TechObject("Auxiliary CIP module",
+                    _ => 2, 2, 2, "AUX_CIP", -1, "", "", auxiliary));
+                Assert.AreEqual(3, techObjectManager.GetNewTechNumber(auxiliary, 2));
+            }
+            finally
+            {
+                techObjects.Clear();
+                techObjects.AddRange(originalTechObjects);
+                baseTechObjectManager.Objects.Clear();
+                baseTechObjectManager.Objects.AddRange(originalBaseTechObjects);
+            }
+        }
+
+        [Test]
+        public void Insert_CipModules_NumbersGloballyAndReservesOneForMain()
+        {
+            var baseTechObjectManager = BaseTechObjectManager.GetInstance();
+            var originalBaseTechObjects = baseTechObjectManager.Objects.ToList();
+            var originalTechObjects = techObjects.ToList();
+
+            try
+            {
+                baseTechObjectManager.Objects.Clear();
+                techObjects.Clear();
+
+                baseTechObjectManager.AddBaseObject("Main CIP module",
+                    "main_cip_module", 1, "main_cip_module", "", false,
+                    "", "", false, false, 2, "MAIN_CIP", true,
+                    "CIP_MODULES");
+                baseTechObjectManager.AddBaseObject("Auxiliary CIP module",
+                    "aux_cip_module", 1, "aux_cip_module", "", false,
+                    "", "", false, false, 2, "AUX_CIP", false,
+                    "CIP_MODULES");
+
+                var mainBaseObject = new BaseObject("main_cip_module", techObjectManager);
+                var auxiliaryBaseObject1 = new BaseObject("aux_cip_module", techObjectManager);
+                var auxiliaryBaseObject2 = new BaseObject("aux_cip_module", techObjectManager);
+                var auxiliaryBaseObject3 = new BaseObject("aux_cip_module", techObjectManager);
+
+                var main = mainBaseObject.Insert() as TechObject.TechObject;
+                var auxiliary1 = auxiliaryBaseObject1.Insert() as TechObject.TechObject;
+                var auxiliary2 = auxiliaryBaseObject2.Insert() as TechObject.TechObject;
+                var auxiliaryCopy = auxiliaryBaseObject3.InsertCopy(auxiliary1) as TechObject.TechObject;
+
+                Assert.Multiple(() =>
+                {
+                    Assert.AreEqual(1, main.TechNumber);
+                    Assert.AreEqual(2, auxiliary1.TechNumber);
+                    Assert.AreEqual(3, auxiliary2.TechNumber);
+                    Assert.AreEqual(4, auxiliaryCopy.TechNumber);
+                });
+            }
+            finally
+            {
+                techObjects.Clear();
+                techObjects.AddRange(originalTechObjects);
+                baseTechObjectManager.Objects.Clear();
+                baseTechObjectManager.Objects.AddRange(originalBaseTechObjects);
+            }
         }
 
         [Test]

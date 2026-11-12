@@ -1,4 +1,4 @@
-﻿    using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Management.Instrumentation;
 using System.Security.Cryptography;
@@ -124,7 +124,7 @@ namespace TechObject
             ObjectsAdder.Reset();
 
             var newObject = new TechObject(baseTechObject.Name, 
-            GetTechObjectLocalNum, techObjectManager.GetNewTechNumber(GetDefaultTechType()), 
+            GetTechObjectLocalNum, techObjectManager.GetNewTechNumber(baseTechObject, GetDefaultTechType()),
             GetDefaultTechType(), GetDefaultNameEplan(), cooperParamNum, GetDefaultMonitorName(), "", baseTechObject);
 
             // Работа со списком в дереве и общим списком объектов.
@@ -448,7 +448,7 @@ namespace TechObject
                 techObj.BaseTechObject.Name == baseTechObject.Name &&
                 techObj.MarkToCut is false)
             {
-                int newN = techObjectManager.GetNewTechNumber(techObj.TechType);
+                int newN = techObjectManager.GetNewTechNumber(baseTechObject, techObj.TechType);
 
                 int oldObjN = globalObjectsList.IndexOf(techObj) + 1;
                 int newObjN = globalObjectsList.Count + 1;

@@ -67,18 +67,11 @@ namespace TechObject
 
         public override bool IsMoveable => true;
 
-        public override bool IsInsertableCopy
-        {
-            get
-            {
-                if (baseObject?.BaseTechObject?.IsSingleInstance == true &&
-                    baseObject.Count > 0)
-                {
-                    return false;
-                }
-                return true;
-            }
-        }
+        private bool IsSingleInstanceLimitReached =>
+            baseObject?.BaseTechObject?.IsSingleInstance == true &&
+            baseObject.Count > 0;
+
+        public override bool IsInsertableCopy => !IsSingleInstanceLimitReached;
 
         public override ITreeViewItem InsertCopy(object obj)
         {
@@ -102,7 +95,7 @@ namespace TechObject
                 return InsertCuttedCopy(techObject);
 
             var clone = techObject.Clone(baseObject.GetTechObjectLocalNum,
-                techObjectManager.GetNewTechNumber(techObject.TechType),
+                techObjectManager.GetNewTechNumber(baseObject.BaseTechObject, techObject.TechType),
                 techObjectManager.TechObjects.IndexOf(techObject) + 1,
                 techObjectManager.TechObjects.Count + 1);
 
@@ -187,18 +180,7 @@ namespace TechObject
             return false;
         }
 
-        public override bool IsInsertable
-        {
-            get
-            {
-                if (baseObject?.BaseTechObject?.IsSingleInstance == true &&
-                    baseObject.Count > 0)
-                {
-                    return false;
-                }
-                return true;
-            }
-        }
+        public override bool IsInsertable => !IsSingleInstanceLimitReached;
 
         /// <summary>
         /// Создание тех. объека на основе типового объекта

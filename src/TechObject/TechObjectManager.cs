@@ -182,12 +182,40 @@ namespace TechObject
                 return targetObjectIndex;
         }
 
-        public int GetNewTechNumber(int techType)
+        public int GetNewTechNumber(BaseTechObject baseTechObject, int techType)
         {
+            if (baseTechObject == null)
+            {
+                throw new ArgumentNullException(nameof(baseTechObject));
+            }
+
+            string numberingGroup = baseTechObject.GlobalTechNumberingGroup;
+            bool hasGlobalNumberingGroup =
+                string.IsNullOrWhiteSpace(numberingGroup) is false;
+
+            if (hasGlobalNumberingGroup && baseTechObject.IsSingleInstance)
+            {
+                return 1;
+            }
+
+            int reservedNumber = hasGlobalNumberingGroup &&
+                BaseTechObjectManager.GetInstance().Objects.Any(candidate =>
+                    candidate.IsSingleInstance && candidate.TechType == techType &&
+                    string.Equals(candidate.GlobalTechNumberingGroup,
+                        numberingGroup, StringComparison.Ordinal))
+                ? 1
+                : 0;
+
             return techObjects
-                .Where(to => to.TechType == techType)
-                .Select(to => to.TechNumber)
-                .DefaultIfEmpty(0)
+                .Where(techObject => techObject.TechType == techType &&
+                    (hasGlobalNumberingGroup
+                        ? string.Equals(
+                            techObject.BaseTechObject?.GlobalTechNumberingGroup,
+                            numberingGroup, StringComparison.Ordinal)
+                        : string.Equals(techObject.BaseTechObject?.EplanName,
+                            baseTechObject.EplanName, StringComparison.Ordinal)))
+                .Select(techObject => techObject.TechNumber)
+                .DefaultIfEmpty(reservedNumber)
                 .Max() + 1;
         }
 

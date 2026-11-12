@@ -40,8 +40,8 @@ namespace TechObjectTests
 
             var techObjectManagerMock = new Mock<ITechObjectManager>();
             techObjectManagerMock.Setup(tom => tom.TechObjects).Returns(techObjects);
-            techObjectManagerMock.Setup(tom => tom.GetNewTechNumber(It.IsAny<int>()))
-                .Returns<int>(techType => techObjects
+            techObjectManagerMock.Setup(tom => tom.GetNewTechNumber(It.IsAny<BaseTechObject>(), It.IsAny<int>()))
+                .Returns<BaseTechObject, int>((numberingBaseObject, techType) => techObjects
                     .Where(to => to.TechType == techType)
                     .Select(to => to.TechNumber)
                     .DefaultIfEmpty(0)
@@ -157,8 +157,8 @@ namespace TechObjectTests
 
             var techObjectManagerMock = new Mock<ITechObjectManager>();
             techObjectManagerMock.Setup(tom => tom.TechObjects).Returns(techObjects);
-            techObjectManagerMock.Setup(tom => tom.GetNewTechNumber(It.IsAny<int>()))
-                .Returns<int>(techType => techObjects
+            techObjectManagerMock.Setup(tom => tom.GetNewTechNumber(It.IsAny<BaseTechObject>(), It.IsAny<int>()))
+                .Returns<BaseTechObject, int>((numberingBaseObject, techType) => techObjects
                     .Where(to => to.TechType == techType)
                     .Select(to => to.TechNumber)
                     .DefaultIfEmpty(0)
@@ -199,8 +199,8 @@ namespace TechObjectTests
 
             var techObjectManagerMock = new Mock<ITechObjectManager>();
             techObjectManagerMock.Setup(tom => tom.TechObjects).Returns(techObjects);
-            techObjectManagerMock.Setup(tom => tom.GetNewTechNumber(It.IsAny<int>()))
-                .Returns<int>(techType => techObjects
+            techObjectManagerMock.Setup(tom => tom.GetNewTechNumber(It.IsAny<BaseTechObject>(), It.IsAny<int>()))
+                .Returns<BaseTechObject, int>((numberingBaseObject, techType) => techObjects
                     .Where(to => to.TechType == techType)
                     .Select(to => to.TechNumber)
                     .DefaultIfEmpty(0)
@@ -316,8 +316,8 @@ namespace TechObjectTests
 
             var techObjectManagerMock = new Mock<ITechObjectManager>();
             techObjectManagerMock.Setup(tom => tom.TechObjects).Returns(techObjects);
-            techObjectManagerMock.Setup(tom => tom.GetNewTechNumber(It.IsAny<int>()))
-                .Returns<int>(techType => techObjects
+            techObjectManagerMock.Setup(tom => tom.GetNewTechNumber(It.IsAny<BaseTechObject>(), It.IsAny<int>()))
+                .Returns<BaseTechObject, int>((numberingBaseObject, techType) => techObjects
                     .Where(to => to.TechType == techType)
                     .Select(to => to.TechNumber)
                     .DefaultIfEmpty(0)

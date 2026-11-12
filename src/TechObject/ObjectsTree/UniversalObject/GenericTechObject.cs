@@ -169,7 +169,7 @@ namespace TechObject
         {
             var techObject = new TechObject(this.Name,
                 BaseObject.GetTechObjectLocalNum,
-                techObjectManager.GetNewTechNumber(this.TechType),
+                techObjectManager.GetNewTechNumber(BaseObject.BaseTechObject, this.TechType),
                 this.TechType, this.NameEplan, this.CooperParamNumber,
                 this.NameBC, this.AttachedObjects.Value, this.BaseTechObject);
 
