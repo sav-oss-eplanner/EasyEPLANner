@@ -298,6 +298,38 @@ namespace Tests.TechObject
             };
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void AddBaseObject_IsSingleInstance_SetsFlagOnObject(bool isSingleInstance)
+        {
+            IBaseTechObjectManager manager = BaseTechObjectManager
+                .GetInstance();
+            manager.Objects.Clear();
+
+            var obj = manager.AddBaseObject("Главный модуль мойки",
+                "main_cip_module", 2, "cip_module", "", false, "", "",
+                false, true, 2, "CIP_MODULE", isSingleInstance);
+
+            Assert.AreEqual(isSingleInstance, obj.IsSingleInstance);
+            Assert.AreEqual(isSingleInstance, manager.Objects
+                .Single(x => x.EplanName == "main_cip_module").IsSingleInstance);
+        }
+
+        [Test]
+        public void GetTechObjectCopy_SingleInstanceObject_CopiesFlag()
+        {
+            IBaseTechObjectManager manager = BaseTechObjectManager
+                .GetInstance();
+            manager.Objects.Clear();
+            manager.AddBaseObject("Главный модуль мойки",
+                "main_cip_module", 2, "cip_module", "", false, "", "",
+                false, true, 2, "CIP_MODULE", true);
+
+            var copy = manager.GetTechObjectCopy("main_cip_module");
+
+            Assert.IsTrue(copy.IsSingleInstance);
+        }
+
         [TestCase(0, "Ячейка процесса")]
         [TestCase(1, "Аппарат")]
         [TestCase(2, "Агрегат")]

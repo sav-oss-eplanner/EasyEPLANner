@@ -100,7 +100,7 @@ namespace TechObject
         {
             get
             {
-                return true;
+                return !SingleInstanceViolation;
             }
         }
 
@@ -115,6 +115,12 @@ namespace TechObject
 
         public override ITreeViewItem Insert()
         {
+            if (SingleInstanceViolation)
+            {
+                ShowSingleInstanceMessage();
+                return null;
+            }
+
             ObjectsAdder.Reset();
 
             var newObject = new TechObject(baseTechObject.Name, 
@@ -141,6 +147,12 @@ namespace TechObject
         /// <returns>Созданная группа с типовым объектом</returns>
         public ITreeViewItem CreateNewGenericGroup()
         {
+            if (SingleInstanceViolation || SingleInstanceGenericViolation)
+            {
+                ShowSingleInstanceMessage();
+                return null;
+            }
+
             ObjectsAdder.Reset();
 
             var newGenericObject = new GenericTechObject(baseTechObject.Name,
@@ -411,12 +423,21 @@ namespace TechObject
         {
             get
             {
-                return true;
+                return !SingleInstanceViolation;
             }
         }
 
         override public ITreeViewItem InsertCopy(object obj)
         {
+            if (SingleInstanceViolation)
+            {
+                var cutting = (obj as TechObject)?.MarkToCut == true;
+                if (!cutting)
+                {
+                    return null;
+                }
+            }
+
             var techObj = obj as TechObject;
             if(techObj == null)
             {
@@ -693,6 +714,32 @@ namespace TechObject
 
         protected string GetDefaultMonitorName() =>
             baseTechObject?.MonitorName ?? string.Empty;
+
+        /// <summary>
+        /// Нарушено ли ограничение единственного экземпляра обычными объектами
+        /// </summary>
+        private bool SingleInstanceViolation =>
+            baseTechObject?.IsSingleInstance == true &&
+            localObjects.Count > 0;
+
+        /// <summary>
+        /// Нарушено ли ограничение единственного экземпляра типовыми объектами
+        /// </summary>
+        private bool SingleInstanceGenericViolation =>
+            baseTechObject?.IsSingleInstance == true &&
+            genericGroups.Count > 0;
+
+        /// <summary>
+        /// Показать сообщение о нарушении ограничения единственного экземпляра
+        /// </summary>
+        protected virtual void ShowSingleInstanceMessage()
+        {
+            System.Windows.Forms.MessageBox.Show(
+                $"Базовый объект \"{baseTechObject.Name}\" допускает только " +
+                "один экземпляр в проекте.",
+                "Ограничение", System.Windows.Forms.MessageBoxButtons.OK,
+                System.Windows.Forms.MessageBoxIcon.Warning);
+        }
 
         protected const int techTypeNum = 2;
         protected const int cooperParamNum = -1;

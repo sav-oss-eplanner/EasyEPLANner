@@ -39,6 +39,7 @@ namespace EplanDevice
                 case nameof(DeviceSubType.VC_IOLINK):
                     AO.Add(new IOChannel("AO", -1, -1, -1, ""));
                     AI.Add(new IOChannel("AI", -1, -1, -1, ""));
+                    parameters.Add(Parameter.P_FB, null);
                     SetIOLinkSizes(ArticleName);
                     break;
 
@@ -116,6 +117,7 @@ namespace EplanDevice
                                 {Tag.NAMUR_ST, 1},
                                 {Tag.OPENED, 1},
                                 {Tag.CLOSED, 1},
+                                {Parameter.P_FB, 1},
                             };
 
                         case DeviceSubType.VC_VIRT:

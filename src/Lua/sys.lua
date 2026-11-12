@@ -44,13 +44,19 @@ function init_objects(objects, is_generic)
 		    local object_name_BC      = value.name_BC or "TankObj"
 		    local cooper_param_number = value.cooper_param_number or -1
 		    local base_tech_object	  = value.base_tech_object or "" 
-		    local attached_objects	  = value.attached_objects or ""
+
+            -- Привязанные агрегаты (два формата, в зависимости от источника):
+            -- attached_objects      — глобальные индексы; хранится в main.objects.lua
+            -- attached_objects_refs — переносимые ссылки base:n;
+            --                         только в файлах импорта/экспорта объектов
+		    local attached_objects      = value.attached_objects or ""
+            local attached_objects_refs = value.attached_objects_refs or ""
             local generic_tech_object_number = value.generic_tech_object or -1;
 
 		    local obj = ADD_TECH_OBJECT(global_number, object_n, object_name,
 			    object_tech_type, object_name_eplan, cooper_param_number,
 			    object_name_BC, base_tech_object, attached_objects,
-                generic_tech_object_number, is_generic)
+                attached_objects_refs, generic_tech_object_number, is_generic)
 		    initialized_objects[number] = obj
         end
 	end
