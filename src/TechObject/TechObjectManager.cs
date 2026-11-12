@@ -89,6 +89,21 @@ namespace TechObject
         }
 
         /// <summary>
+        /// Очистить загруженные данные проекта и переинициализировать Lua,
+        /// чтобы состояние скриптов закрытого проекта не попадало в следующий.
+        /// </summary>
+        public void ClearProject()
+        {
+            treeObjects.Clear();
+            techObjects.Clear();
+            genericTechObjects.Clear();
+            ProjectName = string.Empty;
+
+            lua?.Close();
+            InitLua();
+        }
+
+        /// <summary>
         /// Получение объекта по номеру
         /// </summary>
         /// <param name="i">Номер объекта</param>

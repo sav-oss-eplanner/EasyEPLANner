@@ -410,6 +410,14 @@ namespace EasyEPlanner
         }
 
         /// <summary>
+        /// Обновить редактор, если он уже был создан в standalone-приложении.
+        /// </summary>
+        public void RefreshEditor()
+        {
+            editor?.RefreshEditor();
+        }
+
+        /// <summary>
         /// Загрузить технологические объекты и ограничения из папки проекта.
         /// </summary>
         public int LoadTechObjectsFromContext(out string errStr)
@@ -450,11 +458,20 @@ namespace EasyEPlanner
         /// </summary>
         public static void SaveTechObjectsFromContext(bool silentMode = true)
         {
+            TrySaveTechObjectsFromContext(silentMode);
+        }
+
+        /// <summary>
+        /// Сохранить проект и вернуть признак успешного завершения.
+        /// </summary>
+        public static bool TrySaveTechObjectsFromContext(
+            bool silentMode = true)
+        {
             var context = ProjectContextHolder.Current;
             if (context == null ||
                 string.IsNullOrEmpty(context.ProjectFolderPath))
             {
-                return;
+                return false;
             }
 
             bool showLog = !silentMode && !Logs.IsNull();
@@ -505,6 +522,8 @@ namespace EasyEPlanner
                     "сохранен.");
                 Logs.ShowLastLine();
             }
+
+            return !hasError;
         }
 
         /// <summary>

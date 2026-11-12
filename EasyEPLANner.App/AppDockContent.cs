@@ -10,8 +10,11 @@ namespace EasyEPlanner.App
     [ExcludeFromCodeCoverage]
     internal sealed class AppDockContent : DockContent
     {
-        public AppDockContent(string title)
+        private readonly string persistString;
+
+        public AppDockContent(string title, string persistString)
         {
+            this.persistString = persistString;
             Text = title;
             TabText = title;
             HideOnClose = true;
@@ -26,6 +29,8 @@ namespace EasyEPlanner.App
         }
 
         public Panel HostPanel { get; }
+
+        protected override string GetPersistString() => persistString;
 
         public void ShowOrActivate(DockPanel dockPanel)
         {

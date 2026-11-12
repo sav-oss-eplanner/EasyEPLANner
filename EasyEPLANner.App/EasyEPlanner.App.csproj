@@ -3,7 +3,10 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net472</TargetFramework>
     <RootNamespace>EasyEPlanner.App</RootNamespace>
-    <AssemblyName>EasyEPlanner.App</AssemblyName>
+    <AssemblyName>EasyEPLANner</AssemblyName>
+    <AssemblyTitle>EasyEPLANner</AssemblyTitle>
+    <Product>EasyEPLANner</Product>
+    <ApplicationIcon>Assets\easyEPLANner.ico</ApplicationIcon>
     <PlatformTarget>x64</PlatformTarget>
     <UseWindowsForms>true</UseWindowsForms>
     <LangVersion>preview</LangVersion>
