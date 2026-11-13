@@ -631,6 +631,7 @@ namespace EasyEplannerTests.ProjectContext
         [Test]
         public void LoadLastProject_TrimsWhitespace()
         {
+            Directory.CreateDirectory(settingsDir);
             File.WriteAllText(lastProjectPath,
                 "  C:\\projects\\TestProject \r\n");
 
@@ -725,6 +726,7 @@ namespace EasyEplannerTests.ProjectContext
         public void TryLoadWindowBounds_ReturnsFalse_WhenFileIsMalformed(
             string content)
         {
+            Directory.CreateDirectory(settingsDir);
             File.WriteAllText(windowBoundsPath, content);
 
             bool loaded = TryLoadWindowBounds(out object _,
