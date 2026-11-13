@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows.Forms;
 
 namespace Editor
@@ -27,7 +27,10 @@ namespace Editor
         /// Вызов окна редактирования технологических объектов.
         /// </summary>
         /// <param name="objectTree">Дерево объектов</param>
-        public void OpenEditor(ITreeViewItem objectTree)
+        /// <param name="host">Хост для standalone (обычный Control/Form);
+        /// null — встраивание в EPLAN.</param>
+        public void OpenEditor(ITreeViewItem objectTree,
+            System.Windows.Forms.Control host = null)
         {
             if (editorForm.wasInit == false)
             {
@@ -36,7 +39,14 @@ namespace Editor
                 editorForm.wasInit = true;
             }
 
-            editorForm.ShowDlg();
+            if (host != null)
+            {
+                editorForm.ShowInHost(host);
+            }
+            else
+            {
+                editorForm.ShowDlg();
+            }
         }
 
         public bool IsShown()

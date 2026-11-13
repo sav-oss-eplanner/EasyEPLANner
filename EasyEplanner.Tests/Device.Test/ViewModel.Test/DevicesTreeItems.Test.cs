@@ -221,6 +221,31 @@ namespace EasyEPlanner.Devices.Tests
         }
 
         [Test]
+        public void DevicesDescriptionItem_SetValue_WithoutFunction_UpdatesDevice()
+        {
+            var device = CreateTankDoDevice();
+            var context = new DevicesViewModel(null);
+            var deviceNode = new DevicesDeviceNode(context,
+                (FilterableViewItemBase)context.Root, device, device.Name);
+            var item = new DevicesDescriptionItem(context, deviceNode, device);
+
+            Assert.IsTrue(item.SetValue("new desc"));
+            Assert.AreEqual("new desc", device.Description);
+            Assert.AreEqual("new desc", item.Value);
+        }
+
+        [Test]
+        public void DevicesParameterItem_SetValue_WithoutFunction_DoesNotThrow()
+        {
+            var device = CreateTankAiDevice();
+            var parameter = IODevice.Parameter.P_MIN_V;
+            var item = CreateParameterItem(device, parameter, "0");
+
+            Assert.IsTrue(item.SetValue("1.5"));
+            Assert.AreEqual(1.5, device.Parameters[parameter]);
+        }
+
+        [Test]
         public void DevicesPropertyItem_SetValue_UpdatesDescriptionAndEplanFunction()
         {
             var device = CreateTankDoDevice();

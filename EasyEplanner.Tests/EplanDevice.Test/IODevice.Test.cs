@@ -250,6 +250,18 @@ namespace Tests.EplanDevices
         }
 
         [Test]
+        public void UpdateParameters_WithoutFunction_DoesNotThrow()
+        {
+            IODevice dev = new AO("KOAG4AO1", "+KOAG4-AO1", "Test device", 1, "KOAG", 4);
+            dev.SetSubType("AO");
+            dev.SetParameter("P_MIN_V", 1);
+
+            Assert.DoesNotThrow(() => dev.UpdateParameters());
+            Assert.DoesNotThrow(() => dev.UpdateProperties());
+            Assert.DoesNotThrow(() => dev.UpdateRuntimeParameters());
+        }
+
+        [Test]
         public void Check_CheckEmpty()
         {
             IODevice dev = new AO("KOAG4AO1", "+KOAG4-AO1", "Test device", 1, "KOAG", 4);

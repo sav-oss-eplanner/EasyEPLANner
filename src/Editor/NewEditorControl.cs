@@ -265,11 +265,11 @@ namespace Editor
         {
             if (PI.IsWindowVisible(wndEditVisiblePtr) == true)
             {
-                editIsShown = true;
+                EditIsShown = true;
             }
             else
             {
-                editIsShown = false;
+                EditIsShown = false;
             }
         }
 
@@ -282,7 +282,7 @@ namespace Editor
                             Environment.SpecialFolder.ApplicationData);
 
             IniFile ini = new IniFile(path + @"\Eplan\eplan.cfg");
-            if (editIsShown)
+            if (EditIsShown)
             {
                 ini.WriteString("main", "show_obj_window", "true");
             }
@@ -460,7 +460,7 @@ namespace Editor
             System.Threading.Thread.Sleep(1);
 
             IsShown = false;
-            editIsShown = false;
+            EditIsShown = false;
             wasInit = false;
         }
 
@@ -518,9 +518,55 @@ namespace Editor
             searchBoxTLP.Invalidate();
         }
 
-        public static bool editIsShown = false; //Показано ли окно.
+        public static bool EditIsShown { get; set; } = false; //Показано ли окно.
         public bool IsShown = false; // Костыль, без этого не работает IsShown()
         public static IntPtr wndEditVisiblePtr; // Дескриптор редактора.
+
+        /// <summary>
+        /// Редактор работает вне EPLAN (standalone Form).
+        /// </summary>
+        public bool StandaloneHost { get; private set; }
+
+        /// <summary>
+        /// Показать редактор внутри обычного WinForms-хоста.
+        /// </summary>
+        public void ShowInHost(Control host)
+        {
+            if (host == null)
+                return;
+
+            StandaloneHost = true;
+            wasShown = true;
+            EditIsShown = true;
+            IsShown = true;
+            cancelChanges = false;
+
+            EnableStandaloneEditing();
+
+            if (Parent != host)
+            {
+                host.Controls.Clear();
+                Parent?.Controls.Remove(this);
+                Dock = DockStyle.Fill;
+                host.Controls.Add(this);
+            }
+
+            DisableNeededObjects(treeViewItemsList.ToArray());
+            BringToFront();
+            Show();
+        }
+
+        /// <summary>
+        /// Режим редактирования без EPLAN (standalone App).
+        /// </summary>
+        private void EnableStandaloneEditing()
+        {
+            edit_toolStripButton.Checked = true;
+            Editable = true;
+
+            for (int i = 0; i < editorTView.Columns.Count; i++)
+                editorTView.GetColumn(i).IsEditable = Editable;
+        }
 
         /// <summary>
         /// Показать диалог (окно с редактором).
@@ -528,13 +574,14 @@ namespace Editor
         [ExcludeFromCodeCoverage]
         public void ShowDlg()
         {
+            StandaloneHost = false;
             Process currentProcess = Process.GetCurrentProcess();
 
             // Идентификатор команды вызова окна "Навигатор комментариев"
             const int wndWmCommand = 35381;
             string windowName = "Комментарий";
 
-            if (editIsShown == true && IsShown == true)
+            if (EditIsShown == true && IsShown == true)
             {
                 StaticHelper.GUIHelper.ShowHiddenWindow(currentProcess,
                     wndEditVisiblePtr, wndWmCommand);
@@ -565,7 +612,7 @@ namespace Editor
                 // изменений при закрытии и отключения хука).
                 SetUpHook();
 
-                editIsShown = true;
+                EditIsShown = true;
                 IsShown = true;
                 cancelChanges = false;
 
@@ -598,6 +645,9 @@ namespace Editor
         /// </summary>
         private void HighlightItems()
         {
+            if (StandaloneHost)
+                return;
+
             ProjectManager.GetInstance().RemoveHighLighting();
 
             if (drawDev_toolStripButton.Checked is false)
@@ -1157,6 +1207,12 @@ namespace Editor
         /// </summary>
         private void DrawDev_toolStripButton_Click(object sender, EventArgs e)
         {
+            if (StandaloneHost)
+            {
+                drawDev_toolStripButton.Checked = false;
+                return;
+            }
+
             ProjectManager.GetInstance().RemoveHighLighting();
 
             if (drawDev_toolStripButton.Checked)
@@ -1200,7 +1256,8 @@ namespace Editor
                     column.IsEditable = Editable;
                 }
 
-                EProjectManager.GetInstance().StopEditModes();
+                if (!StandaloneHost)
+                    EProjectManager.GetInstance().StopEditModes();
 
                 DFrm.CheckShown();
                 if (DFrm.GetInstance().IsVisible())
@@ -1233,7 +1290,8 @@ namespace Editor
                 }
 
                 //Редактирование устройств (запуск).
-                EProjectManager.GetInstance().StartEditModesWithDelay();
+                if (!StandaloneHost)
+                    EProjectManager.GetInstance().StartEditModesWithDelay();
 
                 DFrm.CheckShown();
                 if (DFrm.GetInstance().IsVisible())
@@ -1314,7 +1372,7 @@ namespace Editor
             if (binding is null || !binding.IsVisible())
                 return;
 
-            if (!edit_toolStripButton.Checked)
+            if (!StandaloneHost && !edit_toolStripButton.Checked)
             {
                 binding.ShowSignalBinding();
                 return;
@@ -1338,7 +1396,15 @@ namespace Editor
         private void refresh_toolStripButton_Click(object sender, EventArgs e)
         {
             bool saveDescrSilentMode = false;
-            EProjectManager.GetInstance().SyncAndSave(saveDescrSilentMode);
+            if (StandaloneHost)
+            {
+                ProjectManager.SaveTechObjectsFromContext(saveDescrSilentMode);
+            }
+            else
+            {
+                EProjectManager.GetInstance()
+                    .SyncAndSave(saveDescrSilentMode);
+            }
 
             DFrm.GetInstance().RefreshTree();
             IOViewControl.Instance?.RebuildTree();
@@ -1672,7 +1738,8 @@ namespace Editor
 
             // Активировать режим редактирования на фСА для подсветки при выборе элемента: 
             // Раньше активировался только при изменении страницы в EPLAN
-            if (drawDev_toolStripButton.Checked && 
+            if (!StandaloneHost &&
+                drawDev_toolStripButton.Checked && 
                 item?.IsUseDevList is true &&
                 Editable)
                 EProjectManager.GetInstance().StartEditModes();
@@ -1698,7 +1765,7 @@ namespace Editor
                 ModeFrm.GetInstance().SelectDevices(item, SetNewVal);
             }
 
-            if (edit_toolStripButton.Checked)
+            if (StandaloneHost || edit_toolStripButton.Checked)
                 UpdateBindingWindow(item, item is not IAction);
 
             editorTView.EndUpdate();

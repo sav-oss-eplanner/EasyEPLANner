@@ -27,6 +27,22 @@ namespace EasyEPlanner.Devices.Tests
         }
 
         [Test]
+        public void SetValue_ValidSubtypeWithoutFunction_UpdatesInMemory()
+        {
+            var device = new DO("TANK2DO1", "+TANK2-DO1", "desc", 1, "TANK", 2);
+            device.SetSubType("DO");
+
+            var context = new DevicesViewModel(null);
+            var deviceNode = new DevicesDeviceNode(context,
+                (FilterableViewItemBase)context.Root, device, device.Name);
+            var subtypeItem = new DevicesSubtypeItem(context, deviceNode, device);
+
+            Assert.IsTrue(subtypeItem.SetValue("DO_VIRT"));
+            Assert.AreEqual(DeviceSubType.DO_VIRT, device.DeviceSubType);
+            Assert.AreEqual("DO_VIRT", subtypeItem.Description);
+        }
+
+        [Test]
         public void SetValue_InvalidSubtype_ReturnsFalse()
         {
             var subtypeItem = CreateSubtypeItem(out var function);

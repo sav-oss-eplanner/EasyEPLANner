@@ -59,7 +59,11 @@ namespace InterprojectExchange
         /// </summary>
         private bool UpdateDevices()
         {
-            EProjectManager.GetInstance().SyncAndSave();
+            if (!ProjectManager.GetInstance().IsStandalone)
+            {
+                EProjectManager.GetInstance().SyncAndSave();
+            }
+
             return true;
         }
 
@@ -269,6 +273,22 @@ namespace InterprojectExchange
         private static bool TryResolveProjectFolder(string projectName,
             out string projectFolder)
         {
+            // Текущий открытый проект уже знает свой путь через контекст
+            // (в standalone-приложении folder_path в configuration.ini
+            // не задан и незачем показывать ошибку конфигурации).
+            var currentContext = ProjectContextHolder.Current;
+            if (currentContext != null &&
+                string.Equals(currentContext.ProjectName, projectName,
+                    System.StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrEmpty(currentContext.ProjectFolderPath) &&
+                File.Exists(Path.Combine(currentContext.ProjectFolderPath,
+                    devicesAndPLCFile)))
+            {
+                projectFolder = currentContext.ProjectFolderPath;
+                InterprojectProjectCatalog.Register(projectFolder, projectName);
+                return true;
+            }
+
             if (InterprojectProjectCatalog.TryGetProjectFolder(projectName,
                 out projectFolder))
             {

@@ -1,8 +1,11 @@
 ﻿using EasyEPlanner.Extensions;
+using Eplan.EplApi.Base;
 using Eplan.EplApi.DataModel;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace StaticHelper
 {
@@ -159,8 +162,37 @@ namespace StaticHelper
 
         public string Description
         {
-            get => function.Properties.FUNC_COMMENT.GetString();
+            // Логика получения должна совпадать с DeviceHelper.GetDescription,
+            // иначе сравнение ФСА <-> main.io.lua даёт ложные отличия
+            // (например, "пропадающая" точка из-за разной нарезки строк).
+            get
+            {
+                if (function.Properties.FUNC_COMMENT.IsEmpty)
+                    return string.Empty;
+
+                string description = function.Properties.FUNC_COMMENT
+                    .ToString(ISOCode.Language.L___);
+
+                if (description == string.Empty)
+                {
+                    description = function.Properties.FUNC_COMMENT
+                        .ToString(ISOCode.Language.L_ru_RU);
+                }
+
+                description = DescriptionQuotesRegex.Replace(
+                    description ?? string.Empty, string.Empty);
+
+                return description;
+            }
             set => function.Properties.FUNC_COMMENT = value;
         }
+
+        /// <summary>
+        /// Регулярное выражение для удаления кавычек из описания
+        /// (с таймаутом на случай проблемного входа).
+        /// </summary>
+        private static readonly Regex DescriptionQuotesRegex = new Regex(
+            "([\'\"])", RegexOptions.Compiled,
+            TimeSpan.FromMilliseconds(200));
     }
 }

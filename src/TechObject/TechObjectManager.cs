@@ -1,4 +1,4 @@
-﻿using EasyEPlanner;
+using EasyEPlanner;
 using Editor;
 using System;
 using System.Collections.Generic;
@@ -86,6 +86,21 @@ namespace TechObject
             }
 
             return instance;
+        }
+
+        /// <summary>
+        /// Очистить загруженные данные проекта и переинициализировать Lua,
+        /// чтобы состояние скриптов закрытого проекта не попадало в следующий.
+        /// </summary>
+        public void ClearProject()
+        {
+            treeObjects.Clear();
+            techObjects.Clear();
+            genericTechObjects.Clear();
+            ProjectName = string.Empty;
+
+            lua?.Close();
+            InitLua();
         }
 
         /// <summary>
