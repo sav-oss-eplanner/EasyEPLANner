@@ -141,6 +141,19 @@
       <DependentUpon>StatesCreatorDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="EProjectManager\IEProjectManager.cs" />
+    <Compile Include="FileSavers\ModbusXML\TagReference.cs" />
+    <Compile Include="FileSavers\ModbusXML\ModbusChbaseModelView.cs" />
+    <Compile Include="FileSavers\ModbusXML\ModbusXMLDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileSavers\ModbusXML\ModbusXMLDialog.Designer.cs">
+      <DependentUpon>ModbusXMLDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileSavers\ModbusXML\ModbusXmlSaver.cs" />
+    <Compile Include="FileSavers\ModbusXML\XmlExt.cs" />
+    <Compile Include="InterprojectExchange\IInterprojectExchange.cs" />
+    <Compile Include="InterprojectExchange\Models\ICurrentProjectModel.cs" />
+    <Compile Include="Main\GenerateXmlFromCsv.cs" />
     <Compile Include="FileSavers\XML\Chbase\Channel.cs" />
     <Compile Include="FileSavers\XML\Chbase\Driver.cs" />
     <Compile Include="FileSavers\XML\Chbase\IChannel.cs" />
@@ -148,8 +161,6 @@
     <Compile Include="FileSavers\XML\Chbase\ISubtype.cs" />
     <Compile Include="FileSavers\XML\Chbase\Subtype.cs" />
     <Compile Include="FileSavers\XML\XmlExtensions.cs" />
-    <Compile Include="InterprojectExchange\IInterprojectExchange.cs" />
-    <Compile Include="InterprojectExchange\Models\ICurrentProjectModel.cs" />
     <Compile Include="IO\ViewModel\AppendModuleTarget.cs" />
     <Compile Include="IO\ClampFunctionalTextBinder.cs" />
     <Compile Include="IO\ViewModel\BindingErrorClampCollector.cs" />
@@ -658,6 +669,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Editor\Dialogs\ObjectAdder.resx">
       <DependentUpon>ObjectAdder.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileSavers\ModbusXML\ModbusXMLDialog.resx">
+      <DependentUpon>ModbusXMLDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileSavers\XML\Chbase\XMLReporterDialog.resx">
       <DependentUpon>XMLReporterDialog.cs</DependentUpon>
