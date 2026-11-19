@@ -43,10 +43,20 @@ namespace IO.View
             this.Expand_3 = new System.Windows.Forms.ToolStripMenuItem();
             this.Expand_4 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
+            this.searchBoxTLP = new System.Windows.Forms.TableLayoutPanel();
+            this.searchPictureBox = new System.Windows.Forms.PictureBox();
+            this.textBox_search = new System.Windows.Forms.TextBox();
+            this.searchIterator = new EditorControls.SearchIterator();
+            this.searchButtonToolStrip = new System.Windows.Forms.ToolStrip();
+            this.searchTSButton = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparatorSearch = new System.Windows.Forms.ToolStripSeparator();
             this.MainTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.StructPLC)).BeginInit();
             this.tableLayoutPanel2.SuspendLayout();
             this.toolStrip1.SuspendLayout();
+            this.searchBoxTLP.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.searchPictureBox)).BeginInit();
+            this.searchButtonToolStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // MainTableLayoutPanel
@@ -136,6 +146,8 @@ namespace IO.View
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel2.Controls.Add(this.toolStrip1, 0, 0);
+            this.tableLayoutPanel2.Controls.Add(this.searchBoxTLP, 1, 0);
+            this.tableLayoutPanel2.Controls.Add(this.searchButtonToolStrip, 2, 0);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(0);
@@ -157,6 +169,106 @@ namespace IO.View
             this.toolStrip1.TabIndex = 0;
             this.toolStrip1.Text = "toolStrip1";
             // 
+            // searchBoxTLP
+            //
+            this.searchBoxTLP.AutoSize = true;
+            this.searchBoxTLP.BackColor = System.Drawing.SystemColors.Window;
+            this.searchBoxTLP.ColumnCount = 3;
+            this.searchBoxTLP.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 19F));
+            this.searchBoxTLP.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.searchBoxTLP.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 85F));
+            this.searchBoxTLP.Controls.Add(this.searchPictureBox, 0, 0);
+            this.searchBoxTLP.Controls.Add(this.textBox_search, 1, 0);
+            this.searchBoxTLP.Controls.Add(this.searchIterator, 2, 0);
+            this.searchBoxTLP.Cursor = System.Windows.Forms.Cursors.IBeam;
+            this.searchBoxTLP.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.searchBoxTLP.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.searchBoxTLP.Location = new System.Drawing.Point(0, 0);
+            this.searchBoxTLP.Margin = new System.Windows.Forms.Padding(0);
+            this.searchBoxTLP.Name = "searchBoxTLP";
+            this.searchBoxTLP.RowCount = 1;
+            this.searchBoxTLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.searchBoxTLP.Size = new System.Drawing.Size(0, 30);
+            this.searchBoxTLP.TabIndex = 1;
+            this.searchBoxTLP.Visible = false;
+            this.searchBoxTLP.Paint += new System.Windows.Forms.PaintEventHandler(this.SearchBoxTLP_Paint);
+            this.searchBoxTLP.MouseClick += new System.Windows.Forms.MouseEventHandler(this.SearchBoxTLP_MouseClick);
+            //
+            // searchPictureBox
+            //
+            this.searchPictureBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.searchPictureBox.Image = global::EasyEPlanner.Properties.Resources.search;
+            this.searchPictureBox.InitialImage = null;
+            this.searchPictureBox.Location = new System.Drawing.Point(3, 8);
+            this.searchPictureBox.Margin = new System.Windows.Forms.Padding(3, 8, 2, 5);
+            this.searchPictureBox.MaximumSize = new System.Drawing.Size(14, 14);
+            this.searchPictureBox.Name = "searchPictureBox";
+            this.searchPictureBox.Size = new System.Drawing.Size(14, 14);
+            this.searchPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.searchPictureBox.TabIndex = 1;
+            this.searchPictureBox.TabStop = false;
+            this.searchPictureBox.MouseClick += new System.Windows.Forms.MouseEventHandler(this.SearchBoxTLP_MouseClick);
+            //
+            // textBox_search
+            //
+            this.textBox_search.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.textBox_search.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.textBox_search.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textBox_search.ForeColor = System.Drawing.Color.Gray;
+            this.textBox_search.Location = new System.Drawing.Point(20, 8);
+            this.textBox_search.Margin = new System.Windows.Forms.Padding(1, 8, 1, 5);
+            this.textBox_search.MaximumSize = new System.Drawing.Size(110, 0);
+            this.textBox_search.MinimumSize = new System.Drawing.Size(110, 0);
+            this.textBox_search.Name = "textBox_search";
+            this.textBox_search.ShortcutsEnabled = false;
+            this.textBox_search.Size = new System.Drawing.Size(110, 13);
+            this.textBox_search.TabIndex = 0;
+            this.textBox_search.Text = "Поиск...";
+            this.textBox_search.TextChanged += new System.EventHandler(this.TextBox_search_TextChanged);
+            this.textBox_search.GotFocus += new System.EventHandler(this.TextBox_search_GotFocus);
+            this.textBox_search.KeyUp += new System.Windows.Forms.KeyEventHandler(this.TextBox_search_KeyUp);
+            this.textBox_search.LostFocus += new System.EventHandler(this.TextBox_search_LostFocus);
+            //
+            // searchIterator
+            //
+            this.searchIterator.Cursor = System.Windows.Forms.Cursors.Arrow;
+            this.searchIterator.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.searchIterator.Index = 0;
+            this.searchIterator.Location = new System.Drawing.Point(131, 2);
+            this.searchIterator.Margin = new System.Windows.Forms.Padding(0, 2, 1, 1);
+            this.searchIterator.Maximum = 0;
+            this.searchIterator.Name = "searchIterator";
+            this.searchIterator.Size = new System.Drawing.Size(84, 27);
+            this.searchIterator.TabIndex = 2;
+            //
+            // searchButtonToolStrip
+            //
+            this.searchButtonToolStrip.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.searchButtonToolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.searchButtonToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.searchTSButton,
+            this.toolStripSeparatorSearch});
+            this.searchButtonToolStrip.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
+            this.searchButtonToolStrip.Location = new System.Drawing.Point(0, 0);
+            this.searchButtonToolStrip.Name = "searchButtonToolStrip";
+            this.searchButtonToolStrip.Size = new System.Drawing.Size(30, 30);
+            this.searchButtonToolStrip.TabIndex = 2;
+            //
+            // searchTSButton
+            //
+            this.searchTSButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.searchTSButton.Image = global::EasyEPlanner.Properties.Resources.search;
+            this.searchTSButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.searchTSButton.Name = "searchTSButton";
+            this.searchTSButton.Size = new System.Drawing.Size(23, 27);
+            this.searchTSButton.ToolTipText = "Поиск (Ctrl + F)";
+            this.searchTSButton.Click += new System.EventHandler(this.SearchTSButton_Click);
+            //
+            // toolStripSeparatorSearch
+            //
+            this.toolStripSeparatorSearch.Name = "toolStripSeparatorSearch";
+            this.toolStripSeparatorSearch.Size = new System.Drawing.Size(6, 30);
+            //
             // Expand
             // 
             this.Expand.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
@@ -237,6 +349,11 @@ namespace IO.View
             this.tableLayoutPanel2.PerformLayout();
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
+            this.searchBoxTLP.ResumeLayout(false);
+            this.searchBoxTLP.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.searchPictureBox)).EndInit();
+            this.searchButtonToolStrip.ResumeLayout(false);
+            this.searchButtonToolStrip.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -253,5 +370,12 @@ namespace IO.View
         private System.Windows.Forms.ToolStripMenuItem Expand_3;
         private System.Windows.Forms.ToolStripMenuItem Expand_4;
         private System.Windows.Forms.ToolStripButton toolStripButton1;
+        private System.Windows.Forms.TableLayoutPanel searchBoxTLP;
+        private System.Windows.Forms.PictureBox searchPictureBox;
+        private System.Windows.Forms.TextBox textBox_search;
+        private EditorControls.SearchIterator searchIterator;
+        private System.Windows.Forms.ToolStrip searchButtonToolStrip;
+        private System.Windows.Forms.ToolStripButton searchTSButton;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparatorSearch;
     }
 }

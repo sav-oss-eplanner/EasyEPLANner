@@ -3,6 +3,7 @@ using EasyEPlanner;
 using Editor;
 using Eplan.EplApi.DataModel;
 using Eplan.EplApi.Scripting;
+using EditorControls;
 using IO.ViewModel;
 using IO.ViewModel.ViewInterface;
 using PInvoke;
@@ -33,6 +34,22 @@ namespace IO.View
         private bool cellEditUsesComboBox = false;
 
         private readonly PlcCellEditKeyEngine cellEditKeyEngine = new();
+
+        private const string SearchPlaceholder = "Поиск...";
+
+        private string searchText = string.Empty;
+
+        private Timer textBoxSearchTypingTimer;
+
+        private string pendingSearchText;
+
+        private readonly HashSet<object> searchVisibleObjects = new();
+
+        private readonly List<IViewItem> foundSearchItems = new();
+
+        private readonly Dictionary<IViewItem, List<IExpandable>> searchPaths = new();
+
+        private bool isUpdatingModelFilter;
 
         private IEditable cellEditItem;
 
@@ -128,6 +145,7 @@ namespace IO.View
         {
             InitializeComponent();
             InitStructPLC();
+            InitSearch();
             InitContextMenu();
         }
 
@@ -147,6 +165,9 @@ namespace IO.View
             {
                 ImageGetter = GetIconIndex,
                 AspectGetter = obj => (obj as IViewItem).Name,
+                SearchValueGetter = obj => obj is IViewItem item
+                    ? new[] { GetSearchableText(item) }
+                    : null,
                 IsEditable = true,
                 Sortable = false,
             };
@@ -163,6 +184,8 @@ namespace IO.View
             StructPLC.Columns.Add(firstColumn);
             StructPLC.Columns.Add(secondColumn);
             StructPLC.CellEditKeyEngine = cellEditKeyEngine;
+            StructPLC.ModelFilter = new ModelFilter(obj =>
+                searchVisibleObjects.Contains(obj));
 
             EnsureAddModuleIcon();
             EnsureErrorIcon();
@@ -1360,6 +1383,7 @@ namespace IO.View
 
             StructPLC.EndUpdate();
 
+            UpdateModelFilter();
             AutoResizeColumns(StructPLC);
         }
 
@@ -1420,6 +1444,186 @@ namespace IO.View
                     ExpandToLevel(level - 1, item.Items);
                 }
             }
+        }
+
+        private void InitSearch()
+        {
+            searchIterator.IndexChanged += SearchIterator_IndexChanged;
+            searchIterator.SearchSettingsChanged += UpdateModelFilter;
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == (Keys.Control | Keys.F))
+            {
+                searchTSButton.PerformClick();
+                return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        private void SearchTSButton_Click(object sender, EventArgs e)
+        {
+            searchTSButton.Visible = false;
+            searchBoxTLP.Visible = true;
+            textBox_search.Focus();
+        }
+
+        private void SearchBoxTLP_Paint(object sender, PaintEventArgs e) =>
+            ObjectListViewTreeHelper.PaintSearchBoxBorder(e);
+
+        private void SearchBoxTLP_MouseClick(object sender, MouseEventArgs e) =>
+            textBox_search.Focus();
+
+        private void TextBox_search_TextChanged(object sender, EventArgs e)
+        {
+            if (textBox_search.Text == SearchPlaceholder ||
+                textBox_search.Text == string.Empty)
+            {
+                textBoxSearchTypingTimer?.Stop();
+                searchIterator.Maximum = 0;
+                searchText = string.Empty;
+                UpdateModelFilter();
+                return;
+            }
+
+            if (textBoxSearchTypingTimer is null)
+            {
+                textBoxSearchTypingTimer = new Timer { Interval = 300 };
+                textBoxSearchTypingTimer.Tick += TextBoxSearchTypingTimer_Tick;
+            }
+
+            textBoxSearchTypingTimer.Stop();
+            pendingSearchText = textBox_search.Text;
+            textBoxSearchTypingTimer.Start();
+        }
+
+        private void TextBoxSearchTypingTimer_Tick(object sender, EventArgs e)
+        {
+            if (textBoxSearchTypingTimer is null)
+                return;
+
+            searchText = pendingSearchText ?? string.Empty;
+            UpdateModelFilter();
+            textBoxSearchTypingTimer.Stop();
+        }
+
+        private void TextBox_search_GotFocus(object sender, EventArgs e)
+        {
+            if (textBox_search.Text == SearchPlaceholder)
+            {
+                textBox_search.ForeColor = Color.Black;
+                textBox_search.Text = string.Empty;
+            }
+        }
+
+        private void TextBox_search_LostFocus(object sender, EventArgs e)
+        {
+            if (searchIterator.SettingsButtonsFocused)
+            {
+                textBox_search.Focus();
+                return;
+            }
+
+            if (textBox_search.Text == string.Empty && !isUpdatingModelFilter)
+            {
+                textBox_search.ForeColor = Color.Gray;
+                textBox_search.Text = SearchPlaceholder;
+                searchBoxTLP.Visible = false;
+                searchTSButton.Visible = true;
+            }
+        }
+
+        private void TextBox_search_KeyUp(object sender, KeyEventArgs e) =>
+            ObjectListViewTreeHelper.HandleSearchKeyUp(sender, e, StructPLC);
+
+        private void UpdateModelFilter()
+        {
+            isUpdatingModelFilter = true;
+            bool searchBoxWasFocused = textBox_search.Focused;
+
+            StructPLC.UseFiltering = false;
+            searchVisibleObjects.Clear();
+            foundSearchItems.Clear();
+            searchPaths.Clear();
+
+            if (!string.IsNullOrEmpty(searchText))
+            {
+                foreach (var root in DataContext.Roots)
+                    BuildSearchIndex(root, parentMatches: false, new List<IExpandable>());
+
+                searchIterator.Maximum = foundSearchItems.Count;
+                StructPLC.UseFiltering = true;
+            }
+            else
+            {
+                searchIterator.Maximum = 0;
+            }
+
+            ObjectListViewTreeHelper.ApplySearchHighlight(StructPLC, searchText);
+
+            if (searchBoxWasFocused)
+                textBox_search.Focus();
+
+            isUpdatingModelFilter = false;
+        }
+
+        private bool BuildSearchIndex(IViewItem item, bool parentMatches,
+            List<IExpandable> ancestors)
+        {
+            bool matches = Search.Contains(GetSearchableText(item), searchText);
+            if (matches)
+            {
+                foundSearchItems.Add(item);
+                searchPaths[item] = new List<IExpandable>(ancestors);
+            }
+
+            bool matchesInAncestors = parentMatches || matches;
+            bool isVisible = matchesInAncestors;
+            if (item is IExpandable expandable)
+            {
+                var childAncestors = new List<IExpandable>(ancestors) { expandable };
+                foreach (var child in expandable.Items ?? Enumerable.Empty<IViewItem>())
+                {
+                    if (BuildSearchIndex(child, matchesInAncestors, childAncestors))
+                        isVisible = true;
+                }
+            }
+
+            if (isVisible)
+                searchVisibleObjects.Add(item);
+
+            return isVisible;
+        }
+
+        private static string GetSearchableText(IViewItem item)
+        {
+            if (item is IToolTip toolTip)
+            {
+                return $"{item.Name} {item.Description} {toolTip.Name} {toolTip.Description}";
+            }
+
+            return $"{item.Name} {item.Description}";
+        }
+
+        private void SearchIterator_IndexChanged(object sender, int index)
+        {
+            var item = foundSearchItems.ElementAtOrDefault(index - 1);
+            if (item is null || !searchPaths.TryGetValue(item, out var ancestors))
+                return;
+
+            foreach (var ancestor in ancestors)
+            {
+                if (StructPLC.CanExpand(ancestor))
+                    StructPLC.Expand(ancestor);
+            }
+
+            if (item is IExpandable expandable && StructPLC.CanExpand(expandable))
+                StructPLC.Expand(expandable);
+
+            StructPLC.SelectObject(item, true);
+            StructPLC.EnsureModelVisible(item);
         }
 
         private TextBox textBoxCellEditor;
