@@ -225,6 +225,51 @@ namespace IOTests
         }
 
         [Test]
+        public void Description_UsesUnroundedIOLinkSizeFromFile()
+        {
+            var roundedIoLinkProps = new IOLinkSize
+            {
+                SizeOut = 1,
+                SizeIn = 1,
+                SizeOutFromFile = 0.5f,
+                SizeInFromFile = 0.5f
+            };
+            var fileOnlyIoLinkProps = new IOLinkSize
+            {
+                SizeOutFromFile = 0.5f,
+                SizeInFromFile = 0.5f
+            };
+
+            var ioModule = Mock.Of<IIOModule>(m =>
+                m.GetClampBinding(1) == new List<(IIODevice, IIOChannel)>()
+                {
+                    new Tuple<IIODevice, IIOChannel>(
+                        Mock.Of<IIODevice>(d => d.Name == "DEV1" && d.IOLinkProperties == roundedIoLinkProps),
+                        Mock.Of<IIOChannel>(c => c.Name == "AO")).ToValueTuple(),
+                    new Tuple<IIODevice, IIOChannel>(
+                        Mock.Of<IIODevice>(d => d.Name == "DEV2" && d.IOLinkProperties == roundedIoLinkProps),
+                        Mock.Of<IIOChannel>(c => c.Name == "AI")).ToValueTuple(),
+                    new Tuple<IIODevice, IIOChannel>(
+                        Mock.Of<IIODevice>(d => d.Name == "DEV3" && d.IOLinkProperties == fileOnlyIoLinkProps),
+                        Mock.Of<IIOChannel>(c => c.Name == "AO")).ToValueTuple(),
+                    new Tuple<IIODevice, IIOChannel>(
+                        Mock.Of<IIODevice>(d => d.Name == "DEV4" && d.IOLinkProperties == fileOnlyIoLinkProps),
+                        Mock.Of<IIOChannel>(c => c.Name == "AI")).ToValueTuple(),
+                } &&
+                m.Info == Mock.Of<IIOModuleInfo>(i => i.AddressSpaceType == IOModuleInfo.ADDRESS_SPACE_TYPE.AOAI)
+                );
+
+            var module = Mock.Of<IModule>(m => m.IOModule == ioModule);
+            var clamp = new Clamp(module, 1);
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual("DEV1:AO(8) · DEV2:AI(8) · DEV3:AO(8) · DEV4:AI(8)", clamp.Description);
+                Assert.AreEqual("DEV1:AO(8)\r\nDEV2:AI(8)\r\nDEV3:AO(8)\r\nDEV4:AI(8)", (clamp as IToolTip).Description);
+            });
+        }
+
+        [Test]
         public void Description_WithMultilineFunctionalText_FormatsForCell()
         {
             var clampFunction = Mock.Of<IEplanFunction>(f =>

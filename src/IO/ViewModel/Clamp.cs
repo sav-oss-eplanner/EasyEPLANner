@@ -61,20 +61,28 @@ namespace IO.ViewModel
                 IOModuleInfo.ADDRESS_SPACE_TYPE.AOAI or
                 IOModuleInfo.ADDRESS_SPACE_TYPE.DODI) ? $":{channel.Name}" : "";
 
-            var ioLinkSize = "";
-            if (device.IOLinkProperties.GetMaxIOLinkSize() > 0)
+            var ioLinkProperties = device.IOLinkProperties;
+            var ioLinkSize = channel.Name switch
             {
-                if (channel.Name is "AI" or "DI")
-                    ioLinkSize = $"({device.IOLinkProperties.SizeIn * 16})";
-
-                if (channel.Name is "AO" or "DO")
-                    ioLinkSize = $"({device.IOLinkProperties.SizeOut * 16})";
-            }
+                "AI" or "DI" => FormatIOLinkSize(
+                    ioLinkProperties.SizeIn,
+                    ioLinkProperties.SizeInFromFile),
+                "AO" or "DO" => FormatIOLinkSize(
+                    ioLinkProperties.SizeOut,
+                    ioLinkProperties.SizeOutFromFile),
+                _ => string.Empty
+            };
 
 
             var comment = (string.IsNullOrEmpty(channel.Comment)) ? "" : $":{channel.Comment}";
 
             return $"{device.Name}{type}{ioLinkSize}{comment}"; 
+        }
+
+        private static string FormatIOLinkSize(int roundedSize, float sizeFromFile)
+        {
+            float size = sizeFromFile > 0 ? sizeFromFile : roundedSize;
+            return size > 0 ? $"({size * 16})" : string.Empty;
         }
 
         public IEplanFunction ClampFunction =>
