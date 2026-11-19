@@ -39,6 +39,8 @@
         + [Запуск при старте программы](#513-запуск-при-старте-программы)
     + [Схемы](#52-Схемы)
 
+#### EasyEPlanner.App — автономное приложение [<sup>[EasyEPlannerApp.md]</sup>](EasyEPlannerApp.md)
+
 #### Структура ПЛК [<sup>[StructPLC.md]</sup>](StructPLC.md)
 
 #### Окно «Устройства» [<sup>[DevicesView.md]</sup>](DevicesView.md)

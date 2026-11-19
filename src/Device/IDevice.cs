@@ -24,6 +24,18 @@
         string Description { get; }
 
         /// <summary>
+        /// Установить описание устройства в памяти.
+        /// На ФСА значение записывается через Function.Description.
+        /// </summary>
+        void SetDescription(string description);
+
+        /// <summary>
+        /// Сменить подтип в памяти без пересоздания каналов.
+        /// На ФСА значение записывается через Function.SubType.
+        /// </summary>
+        void ApplySubTypeName(string subType);
+
+        /// <summary>
         /// Номер объекта устройства.
         /// </summary>
         int ObjectNumber { get; }

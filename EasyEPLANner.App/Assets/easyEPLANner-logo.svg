@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1140 300">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#172B49"/>
+      <stop offset="1" stop-color="#091321"/>
+    </linearGradient>
+    <linearGradient id="signal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#70F0D0"/>
+      <stop offset="1" stop-color="#28B8D2"/>
+    </linearGradient>
+  </defs>
+  <rect x="12" y="12" width="276" height="276" rx="58" fill="url(#bg)"/>
+  <rect x="13" y="13" width="274" height="274" rx="57" fill="none" stroke="#9DC9E8" stroke-opacity=".18" stroke-width="2"/>
+  <g fill="none" stroke="url(#signal)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M96 78V222"/>
+    <path d="M96 85H204"/>
+    <path d="M96 150H186"/>
+    <path d="M96 215H204"/>
+  </g>
+  <g fill="#F5FBFF" stroke="#10223A" stroke-width="6">
+    <circle cx="204" cy="85" r="11"/>
+    <circle cx="186" cy="150" r="11"/>
+    <circle cx="204" cy="215" r="11"/>
+  </g>
+  <circle cx="186" cy="150" r="5" fill="#F5A64A"/>
+  <text x="338" y="188" font-family="Segoe UI, Arial, sans-serif" font-size="104" font-weight="650" letter-spacing="-3">
+    <tspan fill="#13233A">EasyE</tspan><tspan fill="#21AFC0">PLAN</tspan><tspan fill="#13233A">ner</tspan>
+  </text>
+  <text x="344" y="235" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="500" letter-spacing="4" fill="#668098">ENGINEERING MADE CLEAR</text>
+</svg>

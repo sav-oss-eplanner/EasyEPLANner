@@ -1,4 +1,4 @@
-﻿using EasyEPlanner.ModbusExchange.Model;
+using EasyEPlanner.ModbusExchange.Model;
 using Eplan.EplApi.DataModel.E3D;
 using System;
 using System.Collections.Generic;
@@ -58,7 +58,14 @@ namespace EasyEPlanner.ModbusExchange
         [ExcludeFromCodeCoverage]
         private static string GetPathToSave()
         {
-            var projectName = EProjectManager.GetInstance().GetCurrentProjectName();
+            if (!string.IsNullOrEmpty(
+                ProjectContextHolder.Current?.ProjectFolderPath))
+            {
+                return ProjectContextHolder.Current.ProjectFolderPath;
+            }
+
+            var projectName = EProjectManager.GetInstance()
+                .GetCurrentProjectName();
             return ProjectManager.GetInstance()
                 .GetPtusaProjectsPath(projectName) + projectName;
         }

@@ -194,11 +194,15 @@ namespace EplanDevice
         /// <returns></returns>
         public void UpdateParameters()
         {
+            if (Function is null)
+                return;
+
             var parametersList = new List<string>();
             foreach (var parameter in parameters)
             {
                 if (parameter.Value != null)
-                    parametersList.Add($"{parameter.Key.Name}={parameter.Value}");
+                    parametersList.Add(
+                        $"{parameter.Key.Name}={FormatSchemeValue(parameter.Value)}");
             }
 
             Function.Parameters = string.Join(", ", parametersList);
@@ -210,6 +214,9 @@ namespace EplanDevice
         /// <returns></returns>
         public void UpdateProperties()
         {
+            if (Function is null)
+                return;
+
             var propertiesList = new List<string>();
             foreach (var property in properties)
             {
@@ -222,16 +229,28 @@ namespace EplanDevice
         /// <summary>
         /// Установка параметров времени выполнения на ФСА
         /// </summary>
-        [ExcludeFromCodeCoverage]
         public void UpdateRuntimeParameters()
         {
+            if (Function is null)
+                return;
+
             var runtimeParametersList = new List<string>();
             foreach (var rtPar in rtParameters)
             {
-                runtimeParametersList.Add($"{rtPar.Key}={rtPar.Value}");
+                runtimeParametersList.Add(
+                    $"{rtPar.Key}={FormatSchemeValue(rtPar.Value)}");
             }
 
             Function.RuntimeParameters = string.Join(",", runtimeParametersList);
+        }
+
+        private static string FormatSchemeValue(object value)
+        {
+            if (value is IFormattable formattable)
+                return formattable.ToString(null,
+                    System.Globalization.CultureInfo.InvariantCulture);
+
+            return value?.ToString() ?? string.Empty;
         }
 
         /// <summary>
@@ -552,7 +571,8 @@ namespace EplanDevice
             string res = string.Empty;
 
             res += prefix + "name    = \'" + Name + "\',\n";
-            res += prefix + "descr   = \'" + Description.Replace("\n", ". ") +
+            res += prefix + "descr   = \'" +
+                EplanMultilineText.NormalizeDescription(Description) +
                 "\',\n";
             res += prefix + "dtype   = " + (int)dType + ",\n";
             res += prefix + "subtype = " + dSubType.GetIndex() + ", -- " +

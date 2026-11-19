@@ -195,7 +195,10 @@ namespace IO
         [ExcludeFromCodeCoverage]
         private void CheckNodeIP(string name, string IP)
         {
-            if (ProjectConfiguration.GetInstance()?.
+            bool skipRangeCheck =
+                ProjectContextHolder.Current is FileProjectContext;
+            if (!skipRangeCheck &&
+                ProjectConfiguration.GetInstance()?.
                 BelongToRangesIP(IPConverter.ConvertIPStrToLong(IP)) == false)
             {
                 Logs.AddMessage($"IP-адрес узла '{name}' ({IP}) выходит за диапазон ip-адресов проекта;");

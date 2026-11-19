@@ -257,8 +257,17 @@ namespace EasyEPlanner.Devices.ViewModel
             if (!Device.DeviceType.SubTypeNames().Contains(value))
                 return false;
 
-            Device.Function.SubType = value;
-            valueOverride = "Обновите проект";
+            if (Device.Function != null)
+            {
+                Device.Function.SubType = value;
+                valueOverride = "Обновите проект";
+            }
+            else
+            {
+                Device.ApplySubTypeName(value);
+                valueOverride = null;
+            }
+
             return true;
         }
     }
@@ -297,7 +306,10 @@ namespace EasyEPlanner.Devices.ViewModel
             if (value == Value)
                 return false;
 
-            Device.Function.Description = value;
+            Device.SetDescription(value);
+            if (Device.Function != null)
+                Device.Function.Description = value;
+
             return true;
         }
     }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -164,6 +164,20 @@ namespace IO
             }
 
             isStub = true;
+            return Stub;
+        }
+
+        /// <summary>
+        /// Описание модуля по номеру (как в main.io.lua).
+        /// </summary>
+        public static IOModuleInfo GetModuleInfoByNumber(int number)
+        {
+            IOModuleInfo res = modules.Find(x => x.Number == number);
+            if (res != null)
+            {
+                return res.Clone() as IOModuleInfo;
+            }
+
             return Stub;
         }
 

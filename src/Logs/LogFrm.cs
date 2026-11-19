@@ -215,7 +215,6 @@ namespace EasyEPlanner
 
         private void OkButton_Click(object sender, EventArgs e)
         {
-            richTextBox.Text = "";
             this.Close();
             isExist = false;
         }

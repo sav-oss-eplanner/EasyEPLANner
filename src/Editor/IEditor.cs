@@ -1,4 +1,4 @@
-﻿using System.Windows.Forms;
+using System.Windows.Forms;
 
 namespace Editor
 {
@@ -12,7 +12,8 @@ namespace Editor
         /// </summary>
         /// <param name="objectTree">Дерево объектов</param>
         /// <returns></returns>
-        void OpenEditor(ITreeViewItem objectTree);
+        void OpenEditor(ITreeViewItem objectTree,
+            Control host = null);
 
         /// <summary>
         /// Показан ли редактор

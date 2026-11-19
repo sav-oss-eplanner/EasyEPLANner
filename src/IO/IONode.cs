@@ -155,6 +155,18 @@ namespace IO
             str += prefix + "ntype   = " + savedNtype + ", " + "--" + ntypeComment + "\n";
             str += prefix + "n       = " + n + ",\n";
             str += prefix + "IP      = \'" + ip + "\',\n";
+            if (!string.IsNullOrEmpty(location))
+            {
+                str += prefix + "location = \'" +
+                    location.Replace("'", "\\'") + "\',\n";
+            }
+
+            if (!string.IsNullOrEmpty(LocationDescription))
+            {
+                str += prefix + "location_description = \'" +
+                    LocationDescription.Replace("'", "\\'") + "\',\n";
+            }
+
             str += prefix + "modules =\n";
             str += prefix + "\t{\n";
 

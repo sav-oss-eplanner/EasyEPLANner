@@ -50,8 +50,16 @@ namespace IO.View
 
             if (isLoaded)
             {
-                StaticHelper.GUIHelper.ShowHiddenWindow(oCurrent,
-                    wndPlcVisibilePtr, wndWmCommand);
+                if (wndPlcVisibilePtr != IntPtr.Zero)
+                {
+                    StaticHelper.GUIHelper.ShowHiddenWindow(oCurrent,
+                        wndPlcVisibilePtr, wndWmCommand);
+                }
+                else
+                {
+                    Show();
+                    BringToFront();
+                }
                 return;
             }
 
@@ -79,7 +87,46 @@ namespace IO.View
 
                 isLoaded = true;
             }
+            else
+            {
+                ShowFloating();
+            }
             ChangeUISize();
+        }
+
+        /// <summary>
+        /// Показать окно ПЛК как обычную Form (standalone / без EPLAN).
+        /// </summary>
+        private void ShowFloating()
+        {
+            isLoaded = true;
+            FormBorderStyle = FormBorderStyle.Sizable;
+            Text = "Структура ПЛК";
+            Width = Math.Max(Width, 700);
+            Height = Math.Max(Height, 500);
+            Show();
+            BringToFront();
+        }
+
+        /// <summary>
+        /// Встроить содержимое в WinForms-хост (DockPanel App).
+        /// </summary>
+        public void ShowInHost(Control host)
+        {
+            if (host == null)
+                return;
+
+            if (MainTableLayoutPanel.Parent != host)
+            {
+                MainTableLayoutPanel.Parent?.Controls
+                    .Remove(MainTableLayoutPanel);
+                host.Controls.Clear();
+                MainTableLayoutPanel.Dock = DockStyle.Fill;
+                host.Controls.Add(MainTableLayoutPanel);
+            }
+
+            MainTableLayoutPanel.Show();
+            isLoaded = false;
         }
 
         public static readonly string CfgShowWindowKey = "show_plc_window";

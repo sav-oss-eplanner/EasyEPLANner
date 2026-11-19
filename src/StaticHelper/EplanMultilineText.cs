@@ -128,6 +128,48 @@ namespace StaticHelper
                 NormalizeFunctionalText(edited);
         }
 
+        private static readonly char[] SentenceEndPunctuation =
+        {
+            '.', '!', '?', ':', ';', ',',
+        };
+
+        /// <summary>
+        /// Описание для сравнения lua и ФСА: переносы (\n, ¶)
+        /// приводятся к формату main.io.lua (". ").
+        /// Не добавляет лишнюю точку, если сегмент уже завершён
+        /// знаком пунктуации (иначе на стыке строк получалось "..").
+        /// </summary>
+        public static string NormalizeDescription(string text)
+        {
+            var parts = SplitLines(text);
+            if (parts.Length == 0)
+                return string.Empty;
+
+            var sb = new StringBuilder(text?.Length ?? 0);
+            foreach (var part in parts)
+            {
+                if (sb.Length > 0)
+                {
+                    char last = sb[sb.Length - 1];
+                    sb.Append(SentenceEndPunctuation.Contains(last)
+                        ? " "
+                        : ". ");
+                }
+
+                sb.Append(part);
+            }
+
+            return sb.ToString();
+        }
+
+        public static bool IsSameDescription(string left, string right)
+        {
+            if (IsSameFunctionalText(left, right))
+                return true;
+
+            return NormalizeDescription(left) == NormalizeDescription(right);
+        }
+
         private static string NormalizeFunctionalText(string text)
         {
             return ParseFromEditor(
@@ -145,7 +187,11 @@ namespace StaticHelper
 
             return text.Split(LineSeparators, StringSplitOptions.RemoveEmptyEntries)
                 .Select(part => part.Trim())
-                .Where(part => part.Length > 0)
+                // Отбрасываем "мусорные" фрагменты без букв/цифр (например,
+                // случайный невидимый символ после разделителя строк) —
+                // иначе они создают фантомный лишний сегмент при сравнении.
+                .Where(part => part.Length > 0 &&
+                    part.Any(char.IsLetterOrDigit))
                 .ToArray();
         }
     }

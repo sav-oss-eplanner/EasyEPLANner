@@ -98,6 +98,27 @@ namespace EasyEPlanner.Devices.View
             isLoaded = false;
         }
 
+        /// <summary>
+        /// Встроить содержимое в WinForms-хост (DockPanel App).
+        /// </summary>
+        public void ShowInHost(Control host)
+        {
+            if (host == null)
+                return;
+
+            if (MainTableLayoutPanel.Parent != host)
+            {
+                MainTableLayoutPanel.Parent?.Controls
+                    .Remove(MainTableLayoutPanel);
+                host.Controls.Clear();
+                MainTableLayoutPanel.Dock = DockStyle.Fill;
+                host.Controls.Add(MainTableLayoutPanel);
+            }
+
+            MainTableLayoutPanel.Show();
+            isLoaded = false;
+        }
+
         public static void SaveCfg()
         {
             SaveCfg(PI.IsWindowVisible(wndDevicesVisiblePtr));

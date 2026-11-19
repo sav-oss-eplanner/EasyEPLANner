@@ -29,16 +29,28 @@ namespace IO.ViewModel
             }
 
             var ip = new Property("IP-адрес",
-                () => IONode.Function.IP,
-                ip => IONode.Function.IP = ip);
+                () => IONode.Function?.IP ?? IONode.IP ?? string.Empty,
+                ipValue =>
+                {
+                    if (IONode.Function != null)
+                        IONode.Function.IP = ipValue;
+                });
 
             var SubnetMask = new Property("Маска подсети",
-                () => IONode.Function.SubnetMask,
-                mask => IONode.Function.SubnetMask = mask);
+                () => IONode.Function?.SubnetMask ?? string.Empty,
+                mask =>
+                {
+                    if (IONode.Function != null)
+                        IONode.Function.SubnetMask = mask;
+                });
 
-            var Gateway = new Property("Сетевой шлюз", 
-                () => IONode.Function.Gateway, 
-                gw => IONode.Function.Gateway = gw);
+            var Gateway = new Property("Сетевой шлюз",
+                () => IONode.Function?.Gateway ?? string.Empty,
+                gw =>
+                {
+                    if (IONode.Function != null)
+                        IONode.Function.Gateway = gw;
+                });
 
             modules.AddRange(node.IOModules.Select(m => new Module(m, this)));
             

@@ -98,19 +98,31 @@ namespace EplanDevice
 
             /// <summary>
             /// Сохранение в виде таблицы Lua.
+            /// Строка сохраняется всегда, даже если канал не привязан
+            /// (пустой, "заглушка") — это сохраняет позиционный порядок
+            /// каналов устройства, по которому они сопоставляются при
+            /// последующей загрузке (см. LuaMainIoLoader.LoadDeviceChannels).
             /// </summary>
             /// <param name="prefix">Префикс (для выравнивания).</param>
             public string SaveAsLuaTable(string prefix)
             {
-                string res = string.Empty;
+                bool isBound = physicalClamp >= 0 &&
+                    IOManager.GetInstance()[node] != null &&
+                    IOManager.GetInstance()[node][module - 1] != null;
 
-                if (IOManager.GetInstance()[node] != null &&
-                    IOManager.GetInstance()[node][module - 1] != null &&
-                    physicalClamp >= 0)
+                int offset = -1;
+                int outNode = -1;
+                int outPhysicalClamp = -1;
+                int outLogicalClamp = -1;
+                int outModuleOffset = -1;
+
+                if (isBound)
                 {
-                    res += prefix + "{\n";
+                    outNode = node;
+                    outPhysicalClamp = physicalClamp;
+                    outLogicalClamp = logicalClamp;
+                    outModuleOffset = moduleOffset;
 
-                    int offset;
                     switch (name)
                     {
                         case DO:
@@ -133,20 +145,24 @@ namespace EplanDevice
                             offset = -1;
                             break;
                     }
-
-                    if (comment != string.Empty)
-                    {
-                        res += prefix + "-- " + comment + "\n";
-                    }
-
-                    res += prefix + $"node          = {node},\n";
-                    res += prefix + $"offset        = {offset},\n";
-                    res += prefix + $"physical_port = {physicalClamp},\n";
-                    res += prefix + $"logical_port  = {logicalClamp},\n";
-                    res += prefix + $"module_offset = {moduleOffset}\n";
-
-                    res += prefix + "},\n";
                 }
+
+                string res = prefix + "{\n";
+
+                // Комментарий сохраняется только как читаемый Lua-комментарий
+                // (поле comment не пишется — сопоставление каналов при
+                // загрузке идёт по позиции, а не по комментарию).
+                if (comment != string.Empty)
+                {
+                    res += prefix + "-- " + comment + "\n";
+                }
+
+                res += prefix + $"node          = {outNode},\n";
+                res += prefix + $"offset        = {offset},\n";
+                res += prefix + $"physical_port = {outPhysicalClamp},\n";
+                res += prefix + $"logical_port  = {outLogicalClamp},\n";
+                res += prefix + $"module_offset = {outModuleOffset}\n";
+                res += prefix + "},\n";
 
                 return res;
             }

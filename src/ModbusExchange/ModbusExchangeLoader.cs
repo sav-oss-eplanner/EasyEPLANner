@@ -1,4 +1,4 @@
-﻿using EasyEPlanner.ModbusExchange.Model;
+using EasyEPlanner.ModbusExchange.Model;
 using EplanDevice;
 using LuaInterface;
 using StaticHelper;
@@ -55,7 +55,14 @@ namespace EasyEPlanner.ModbusExchange
         [ExcludeFromCodeCoverage]
         private static string GetPathToLoad()
         {
-            var projectName = EProjectManager.GetInstance().GetCurrentProjectName();
+            if (!string.IsNullOrEmpty(
+                ProjectContextHolder.Current?.ProjectFolderPath))
+            {
+                return ProjectContextHolder.Current.ProjectFolderPath;
+            }
+
+            var projectName = EProjectManager.GetInstance()
+                .GetCurrentProjectName();
             return ProjectManager.GetInstance()
                 .GetPtusaProjectsPath(projectName) + projectName;
         }
