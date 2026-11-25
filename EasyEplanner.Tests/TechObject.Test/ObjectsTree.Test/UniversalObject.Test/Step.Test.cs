@@ -876,6 +876,74 @@ namespace EasyEplanner.Tests
             Assert.AreEqual(DrawInfo.Style.GREEN_BOX, draw[0].DrawingStyle);
         }
 
+        [TestCase(-1)]
+        [TestCase(1)]
+        public void Check_ExistingNextStepNumber_ReturnsNoError(int nextStepNumber)
+        {
+            var step = CreateStepForCheck();
+            step.SetPar(1, nextStepNumber, 1);
+
+            var errors = step.Check();
+
+            StringAssert.DoesNotContain("Номер следующего шага", errors);
+        }
+
+        [Test]
+        public void Check_NonExistingNextStepNumber_ReturnsError()
+        {
+            var step = CreateStepForCheck();
+            step.SetPar(1, 2, 1);
+
+            var errors = step.Check();
+
+            StringAssert.Contains("Номер следующего шага", errors);
+            StringAssert.Contains("- \"2\".", errors);
+            StringAssert.Contains(
+                "\"1. Объект №1 (#0)\" -> операция \"Операция\" -> " +
+                "шаг \"Шаг 1\" -> св-во \"Номер следующего шага\"",
+                errors);
+        }
+
+        [Test]
+        public void Check_CurrentStepAsNextStep_ReturnsError()
+        {
+            var step = CreateStepForCheck();
+            step.SetPar(1, 0, 1);
+
+            var errors = step.Check();
+
+            StringAssert.Contains("текущий шаг недопустим", errors);
+            StringAssert.Contains("- \"0\".", errors);
+        }
+
+        [Test]
+        public void Check_NonNumericNextStepNumber_ReturnsError()
+        {
+            var step = CreateStepForCheck();
+            var nextStepNumber = (ObjectProperty)typeof(Step)
+                .GetField("nextStepN", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .GetValue(step);
+            nextStepNumber.SetValue("abc");
+
+            var errors = step.Check();
+
+            StringAssert.Contains("Номер следующего шага", errors);
+            StringAssert.Contains("- \"abc\".", errors);
+        }
+
+        private static Step CreateStepForCheck()
+        {
+            var techObject = new TechObject.TechObject("Объект", getN => 1,
+                1, 2, "TANK", -1, "", "", null);
+            var mode = new Mode("Операция", getN => 1,
+                techObject.ModesManager);
+            var state = new State(State.StateType.RUN, mode, true);
+            state.AddStep("Шаг 1", string.Empty);
+            state.AddStep("Шаг 2", string.Empty);
+
+            return state.Steps[1];
+        }
+
         [Test]
         public void CheckInOutGroupActions()
         {

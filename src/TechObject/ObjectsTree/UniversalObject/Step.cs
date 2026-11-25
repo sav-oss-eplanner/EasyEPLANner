@@ -909,7 +909,36 @@ namespace TechObject
 
             errors += CheckOpenAndCloseActions(techObjName, modeName);
             errors += CheckInOutGroupActions();
+            errors += CheckNextStepNumber(state, techObjName, modeName);
             return errors;
+        }
+
+        private string CheckNextStepNumber(State state, string techObjName,
+            string modeName)
+        {
+            if (IsMainStep)
+            {
+                return string.Empty;
+            }
+
+            bool isValidNumber = int.TryParse(NextStepN, out int nextStepNumber);
+            bool isExistingStep = isValidNumber && (nextStepNumber == -1 ||
+                (nextStepNumber >= 0 && nextStepNumber < state.Steps.Count - 1));
+            bool isCurrentStep = isExistingStep && nextStepNumber >= 0 &&
+                nextStepNumber == state.GetStepN(this) - 1;
+
+            if (isExistingStep && !isCurrentStep)
+            {
+                return string.Empty;
+            }
+
+            string error = isCurrentStep
+                ? "переход в текущий шаг недопустим"
+                : "указанный шаг не существует";
+
+            return $"\"{techObjName}\" -> " +
+                $"операция \"{modeName}\" -> шаг \"{GetStepName()}\" -> " +
+                $"св-во \"Номер следующего шага\": Некорректное значение, {error} - \"{NextStepN}\".\n";
         }
 
         private string CheckOpenAndCloseActions(string techObjName,
