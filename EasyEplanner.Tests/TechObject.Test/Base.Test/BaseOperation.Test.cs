@@ -67,6 +67,29 @@ namespace EasyEplanner.Tests
             });
         }
 
+        [Test]
+        public void DisplayText_CountsOnlyVisibleNestedProperties()
+        {
+            var operation = new BaseOperation(null);
+            var groups = Enumerable.Range(1, 3)
+                .Select(index => operation.AddGroupParameter(
+                    $"GROUP_{index}", $"Группа {index}", true, true))
+                .ToList();
+
+            for (int index = 0; index < groups.Count; index++)
+            {
+                groups[index].AddActiveParameter(
+                    $"PROPERTY_{index}", $"Свойство {index}", "");
+                groups[index].SetNewValue("false");
+            }
+
+            Assert.AreEqual("Доп. свойства (3)", operation.DisplayText[0]);
+
+            groups.ForEach(group => group.SetNewValue("true"));
+
+            Assert.AreEqual("Доп. свойства (6)", operation.DisplayText[0]);
+        }
+
         [TestCaseSource(nameof(AddStepTestCaseSource))]
         public void AddStep_NewOperation_CorrectAddingOfSteps(
             Dictionary<string, List<BaseStep>> addingStates,

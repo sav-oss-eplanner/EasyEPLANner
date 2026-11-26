@@ -658,11 +658,43 @@ namespace TechObject
         #endregion
 
         #region Реализация ITreeViewItem
-        override public string[] DisplayText => [ 
-            $"Доп. свойства" +
-                (Properties.Any() ?
-                $" ({Properties.Count})" : ""),
-            string.Empty];
+        override public string[] DisplayText
+        {
+            get
+            {
+                int visiblePropertiesCount = GetVisiblePropertiesCount();
+                return
+                [
+                    $"Доп. свойства" +
+                        (visiblePropertiesCount > 0 ?
+                        $" ({visiblePropertiesCount})" : ""),
+                    string.Empty
+                ];
+            }
+        }
+
+        private int GetVisiblePropertiesCount()
+        {
+            var properties = Properties;
+            var visibleProperties = new HashSet<BaseParameter>();
+            AddVisibleParameters(RootProperties, visibleProperties);
+
+            return properties.Count(visibleProperties.Contains);
+        }
+
+        private static void AddVisibleParameters(
+            IEnumerable<ITreeViewItem> items,
+            ISet<BaseParameter> visibleProperties)
+        {
+            foreach (var item in items.Where(item => item.Visibility))
+            {
+                if (item is BaseParameter parameter)
+                    visibleProperties.Add(parameter);
+
+                if (item.Items is { } children)
+                    AddVisibleParameters(children, visibleProperties);
+            }
+        }
 
         public override bool IsCopyable => true;
 
