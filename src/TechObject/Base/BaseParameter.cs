@@ -228,8 +228,10 @@ namespace TechObject
         override public string[] DisplayText => CurrentValueType switch
         {
             ValueType.Device or ValueType.ManyDevices => [Name, GetDevicesString()],
-            ValueType.Number when 
-                DisplayObjects.Contains(DisplayObject.Operation) && 
+            ValueType.Parameter when TryGetParameter(Value, out var parameter) =>
+                [Name, $"{parameter.GetParameterNumber}. {parameter.GetNameLua()}"],
+            ValueType.Number when
+                DisplayObjects.Contains(DisplayObject.Operation) &&
                 TryGetOperationByNumber(Value, out var operation) => [Name, operation.DisplayText[0]],
             _ => [Name, Value],
         };
@@ -311,6 +313,11 @@ namespace TechObject
                 return ValueType.Boolean;
             }
 
+            if (TryGetParameter(value, out _) || IsUnresolvedParameterNumber(value))
+            {
+                return ValueType.Parameter;
+            }
+
             if (int.TryParse(value, out _))
             {
                 return ValueType.Number;
@@ -354,6 +361,54 @@ namespace TechObject
             return ValueType.Other;
         }
 
+        private bool TryGetParameter(string value, out Param parameter)
+        {
+            parameter = null;
+            if (!DisplayParameters || string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            Params parameters = GetCurrentTechObject()?.GetParamsManager()?.Float;
+            if (parameters is null)
+            {
+                return false;
+            }
+
+            if (int.TryParse(value, out int parameterNumber))
+            {
+                if (parameterNumber <= 0)
+                {
+                    return false;
+                }
+
+                parameter = parameters.GetParam(parameterNumber - 1);
+            }
+            else
+            {
+                parameter = parameters.GetParam(value);
+            }
+
+            return parameter != null;
+        }
+
+        private string GetParameterLuaName(string value)
+            => TryGetParameter(value, out var parameter)
+                ? parameter.GetNameLua()
+                : value;
+
+        private bool IsUnresolvedParameterNumber(string value)
+        {
+            if (!DisplayParameters || !int.TryParse(value, out int parameterNumber) ||
+                parameterNumber <= 0)
+            {
+                return false;
+            }
+
+            ParamsManager paramsManager = GetCurrentTechObject()?.GetParamsManager();
+            return paramsManager is null || !paramsManager.Initialized;
+        }
+
         protected static bool IsStubValue(string value)
         {
             return string.Equals(value?.Trim(),
@@ -383,7 +438,7 @@ namespace TechObject
                 ValueType.Device => $"{prefix}{LuaName} = prg.control_modules.{Value}",
                 ValueType.ManyDevices => $"{prefix}{SaveMoreThanOneDevice(LuaName, Value)}",
                 ValueType.Number => GetNumberParameterStringForSave(prefix),
-                ValueType.Parameter => $"{prefix}{LuaName} = {objName}.PAR_FLOAT.{Value}",
+                ValueType.Parameter => $"{prefix}{LuaName} = {objName}.PAR_FLOAT.{GetParameterLuaName(Value)}",
                 _ => string.Empty
             };
         }
