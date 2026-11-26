@@ -47,7 +47,7 @@ namespace TechObject
         private void GenerateObject(IDriver root, TechObject techObject, int num)
         {
             List<Mode> modes = techObject.ModesManager.Modes;
-            var stDescription = $"{techObject.NameBC}{techObject.TechNumber}";
+            var stDescription = techObject.GetNameForChannelBase();
             string objName = GenerateObjectName(techObject, num);
 
             GenerateOperations(root, modes, stDescription, objName);
@@ -208,7 +208,7 @@ namespace TechObject
         {
             if (cdbxNewNames)
             {
-                return item.NameBC.ToUpper() + item.TechNumber.ToString();
+                return item.GetNameForChannelBase();
             }
             else
             {

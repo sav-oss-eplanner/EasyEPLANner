@@ -322,7 +322,8 @@ namespace TechObject
             if (genericTechObject.techType.Value != "-1")
                 techType.SetNewValue(genericTechObject.techType.Value);
             if (genericTechObject.nameBC.IsFilled)
-                nameBC.SetNewValue(genericTechObject.NameBC + TechNumber);
+                nameBC.SetNewValue(AddTechNumberIfNameHasNoDigits(
+                    genericTechObject.NameBC, TechNumber));
             if (genericTechObject.nameEplan.IsFilled)
                 nameEplan.SetNewValue(genericTechObject.NameEplan);
             if (genericTechObject.cooperParamNumber.IsFilled)
@@ -619,6 +620,24 @@ namespace TechObject
             {
                 return Convert.ToString(nameBC.EditText[1]);
             }
+        }
+
+        /// <summary>
+        /// Получить сгенерированное имя объекта Monitor для базы каналов
+        /// и отчётов: если в заданном имени нет цифр, к нему добавляется номер
+        /// технологического объекта.
+        /// </summary>
+        public string GetNameForChannelBase()
+        {
+            return AddTechNumberIfNameHasNoDigits(NameBC, TechNumber);
+        }
+
+        private static string AddTechNumberIfNameHasNoDigits(string monitorName,
+            int techNumber)
+        {
+            return monitorName != null && monitorName.Any(char.IsDigit)
+                ? monitorName
+                : monitorName + techNumber;
         }
 
         /// <summary>
