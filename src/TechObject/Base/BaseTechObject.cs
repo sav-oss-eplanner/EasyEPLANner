@@ -29,6 +29,7 @@ namespace TechObject
             Deprecated = false;
             DenyBindingToUnit = false;
             IsSingleInstance = false;
+            GlobalTechNumberingGroup = string.Empty;
 
             objectGroups = new List<AttachedObjects>();
         }
@@ -417,6 +418,7 @@ namespace TechObject
 
             cloned.DenyBindingToUnit = DenyBindingToUnit;
             cloned.IsSingleInstance = IsSingleInstance;
+            cloned.GlobalTechNumberingGroup = GlobalTechNumberingGroup;
 
             return cloned;
         }
@@ -541,6 +543,12 @@ namespace TechObject
         /// объекта полем isSingleInstance.
         /// </summary>
         public bool IsSingleInstance { get; set; }
+
+        /// <summary>
+        /// Имя общей глобальной серии технологических номеров.
+        /// Пустое значение означает нумерацию отдельно в рамках этого базового объекта.
+        /// </summary>
+        public string GlobalTechNumberingGroup { get; set; }
 
         private List<BaseParameter> aggregateProperties;
         private List<AttachedObjects> objectGroups;

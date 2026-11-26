@@ -320,6 +320,7 @@ namespace Tests.TechObject
             string expectedLuaModuleName = "LuaModuleName";
             bool expectedDeprecated = false;
             bool expectedIsSingleInstance = true;
+            string expectedGlobalTechNumberingGroup = "CIP_MODULES";
 
             var obj = new BaseTechObject();
             obj.Name = expectedName;
@@ -331,6 +332,7 @@ namespace Tests.TechObject
             obj.LuaModuleName = expectedLuaModuleName;
             obj.Deprecated = expectedDeprecated;
             obj.IsSingleInstance = expectedIsSingleInstance;
+            obj.GlobalTechNumberingGroup = expectedGlobalTechNumberingGroup;
 
             // null - is Owner, dependency
             var clonedObj = obj.Clone(null);
@@ -347,6 +349,8 @@ namespace Tests.TechObject
                 Assert.AreEqual(expectedLuaModuleName, clonedObj.LuaModuleName);
                 Assert.AreEqual(expectedDeprecated, clonedObj.Deprecated);
                 Assert.AreEqual(expectedIsSingleInstance, clonedObj.IsSingleInstance);
+                Assert.AreEqual(expectedGlobalTechNumberingGroup,
+                    clonedObj.GlobalTechNumberingGroup);
             });
         }
 

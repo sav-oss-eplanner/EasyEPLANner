@@ -1188,7 +1188,7 @@ ProjectTestEnabled=True
             <td> <b> P_C0    <td> Сдвиг нуля <tr>
             <td> <b> P_MIN_V <td> Минимальное значение <tr>
             <td> <b> P_MAX_V <td> Максимальное значение
-        <tr> <td rowspan = 2> <b> 
+        <tr> <td rowspan = 2> <b>
         QT_IOLINK 
             <td> <b> P_ERR <td> Аварийное значение <tr>
             <td> <b> P_MAX_V <td> Максимальное значение
@@ -1294,7 +1294,7 @@ ProjectTestEnabled=True
         <tr> <td rowspan = 1> <b> 
         PT_IOLINK
             <td> <b> P_ERR <td> Аварийное значение
-        <tr> <td> <b> 
+        <tr> <td> <b>
         VC_IOLINK
             <td> <b> P_FB <td> Обратная связь
         <tr> <td rowspan = 17> <b> 
@@ -2763,6 +2763,14 @@ _Примечание_: адрес базы знаний (_основной_) и
 -- 15. deprecated - устарел объект или нет. Если устарел - не будет показан в списке базовых объектов,
 -- но его можно использовать в уже существующих проектах, где такие объекты используются. Для этого
 -- надо добавлять его через Insert в группе объектов.
+-- 16. isSingleInstance - разрешает создать только один экземпляр базового объекта.
+-- 17. globalTechNumberingGroup - необязательное имя общей серии TechNumber.
+-- Базовые объекты с одинаковой группой нумеруются совместно, отдельно для каждого TechType.
+-- Без группы номера выделяются отдельно для каждого базового объекта и TechType.
+-- Если в глобальной группе есть объект с isSingleInstance = true, за ним закрепляется номер 1,
+-- а остальные объекты этой группы и TechType получают номера начиная с 2.
+-- Например, главный и вспомогательные модули мойки задают одну группу "CIP_MODULES";
+-- у главного модуля дополнительно задаётся isSingleInstance = true.
 
 -- Базовые операции (baseOperations) (название таблицы - это Lua-имя операции, пишется в верхнем регистре):
 -- 1. name - русскоязычное название операции.
@@ -2890,6 +2898,8 @@ return
             parameters = { object_parameters.ParLuaName1, },
             luaModuleName = "name",
             monitorName = "TankObj",
+            isSingleInstance = false,
+            globalTechNumberingGroup = "",
             baseProperties =
             {
                 active = -- Активные параметры
