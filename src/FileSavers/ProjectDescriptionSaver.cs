@@ -184,6 +184,179 @@ namespace EasyEPlanner
             fileData.Append(description);
 
             SaveData(pathToFile, fileData);
+
+            //Дополнительно генерируем per-object модули для "горячей"
+            //перезагрузки объектов (objects/obj_<N>.lua + registry.lua).
+            SaveTechObjectModules(par);
+        }
+
+        /// <summary>
+        /// Сохранить per-object модули объектов в каталог objects/.
+        ///
+        /// Для каждого объекта пишется файл objects/obj_<N>.lua, возвращающий
+        /// таблицу-описание объекта (N - глобальный порядковый номер объекта).
+        /// Эти файлы используются на рантайме при "горячей" перезагрузке
+        /// (см. reload_tech_object в sys/sys.objects.lua).
+        /// </summary>
+        /// <param name="par">Параметры сохранения.</param>
+        private static void SaveTechObjectModules(ParametersForSave par)
+        {
+            string dir = Path.Combine(par.path, TechObjectModulesDirName);
+            Directory.CreateDirectory(dir);
+
+            string description = techObjectManager.SaveAsLuaTable("");
+            string text = description.Replace("\r\n", "\n").Replace("\r", "\n");
+            string[] lines = text.Split('\n');
+
+            int funcIdx = Array.FindIndex(lines, line =>
+                line.Trim() == "init_tech_objects_modes = function()");
+            if (funcIdx < 0)
+            {
+                return;
+            }
+
+            int i = funcIdx + 1;
+            for (; i < lines.Length && lines[ i ].Trim() != "return"; i++) { }
+            if (i >= lines.Length)
+            {
+                return;
+            }
+
+            i++;
+            for (; i < lines.Length && string.IsNullOrWhiteSpace(lines[ i ]); i++) { }
+            if (i >= lines.Length || lines[ i ].Trim() != "{")
+            {
+                return;
+            }
+
+            //Разбор записей "[ N ] = { ... }" на верхнем уровне списка объектов.
+            var entryRegex = new Regex(@"^(\s*)\[ (\d+) \]\s*=$");
+            var registryNumbers = new List<int>();
+            var bodyLines = new List<string>();
+            int depth = 0;
+            bool inEntry = false;
+            int currentNumber = -1;
+
+            for (int cur = i + 1; cur < lines.Length; cur++)
+            {
+                string line = lines[ cur ];
+
+                if (!inEntry)
+                {
+                    var match = entryRegex.Match(line);
+                    if (match.Success)
+                    {
+                        inEntry = true;
+                        currentNumber = int.Parse(match.Groups[ 2 ].Value);
+                        bodyLines.Clear();
+                        depth = 0;
+                    }
+                    continue;
+                }
+
+                bodyLines.Add(line);
+                foreach (char symbol in line)
+                {
+                    if (symbol == '{') depth++;
+                    else if (symbol == '}') depth--;
+                }
+
+                if (depth == 0)
+                {
+                    //Запись объекта закрыта - пишем файл модуля.
+                    WriteObjectModuleFile(dir, currentNumber, bodyLines);
+                    registryNumbers.Add(currentNumber);
+                    inEntry = false;
+                }
+            }
+
+            WriteRegistryFile(dir, registryNumbers);
+        }
+
+        /// <summary>
+        /// Запись файла модуля одного объекта.
+        /// </summary>
+        /// <param name="dir">Каталог objects/.</param>
+        /// <param name="number">Глобальный номер объекта [N].</param>
+        /// <param name="bodyLines">Строки тела записи "[N] = { ... }".</param>
+        private static void WriteObjectModuleFile(string dir, int number,
+            List<string> bodyLines)
+        {
+            if (bodyLines.Count == 0)
+            {
+                return;
+            }
+
+            //Строки тела начинаются с ключа-открывающей "{" записи объекта.
+            //Убираем один уровень отступа (4 пробела), чтобы тело модуля имело
+            //привычное форматирование (как элемент внутри main.objects.lua).
+            var moduleLines = new List<string>();
+            foreach (string rawLine in bodyLines)
+            {
+                if (rawLine.StartsWith("    "))
+                {
+                    moduleLines.Add(rawLine.Substring(4));
+                }
+                else
+                {
+                    moduleLines.Add(rawLine);
+                }
+            }
+
+            //Последняя непустая строка - закрывающая "}" объекта; убираем
+            //хвостовую запятую (в модуле объект возвращается как выражение).
+            for (int i = moduleLines.Count - 1; i >= 0; i--)
+            {
+                if (moduleLines[ i ].Trim().Length > 0)
+                {
+                    string last = moduleLines[ i ].TrimEnd();
+                    if (last.EndsWith(","))
+                    {
+                        moduleLines[ i ] = last.Substring(0, last.Length - 1);
+                    }
+                    break;
+                }
+            }
+
+            string version = string.Format(VersionPattern,
+                techObjectModulesFileVersion);
+            var fileData = new StringBuilder();
+            fileData.AppendLine(version);
+            fileData.AppendLine(AssemblyVersion.GetVersionAsLuaComment());
+            fileData.AppendLine("--Модуль объекта [" + number +
+                "]. Генерируется EasyEPLANner.");
+            fileData.Append(AddDashes());
+            fileData.AppendLine("return");
+            fileData.AppendLine(string.Join("\n", moduleLines));
+
+            string pathToFile = Path.Combine(dir, "obj_" + number + ".lua");
+            SaveData(pathToFile, fileData);
+        }
+
+        /// <summary>
+        /// Запись реестра объектов objects/registry.lua.
+        /// </summary>
+        /// <param name="dir">Каталог objects/.</param>
+        /// <param name="numbers">Глобальные номера объектов в порядке проекта.</param>
+        private static void WriteRegistryFile(string dir, List<int> numbers)
+        {
+            string version = string.Format(VersionPattern,
+                techObjectModulesFileVersion);
+            var fileData = new StringBuilder();
+            fileData.AppendLine(version);
+            fileData.AppendLine(AssemblyVersion.GetVersionAsLuaComment());
+            fileData.AppendLine("--Реестр объектов проекта (горячая перезагрузка).");
+            fileData.Append(AddDashes());
+            fileData.AppendLine("registry =");
+            fileData.AppendLine("    {");
+            foreach (int number in numbers)
+            {
+                fileData.AppendLine("    " + number + ",");
+            }
+            fileData.AppendLine("    }");
+
+            string pathToFile = Path.Combine(dir, RegistryFileName);
+            SaveData(pathToFile, fileData);
         }
 
         /// <summary>
@@ -451,6 +624,9 @@ namespace EasyEPlanner
         private const string mainIOFileName = "main.io.lua";
         public const string MainTechObjectsFileName = "main.objects.lua";
         public const string MainRestrictionsFileName = "main.restrictions.lua";
+        private const string TechObjectModulesDirName = "objects";
+        private const string RegistryFileName = "registry.lua";
+        private const int techObjectModulesFileVersion = 1;
         private const string mainProgramFileName = "main.plua";
         private static string mainProgramFilePattern = "";
         private static bool mainProgramFilePatternIsLoaded = false;
