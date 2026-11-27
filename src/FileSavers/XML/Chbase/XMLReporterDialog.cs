@@ -40,6 +40,13 @@ namespace EasyEPlanner
             UpdatePathFromMode();
         }
 
+        private static bool IsSplitBaseFilePath(string filePath)
+        {
+            string baseName = Path.GetFileNameWithoutExtension(filePath ?? string.Empty);
+            return baseName.EndsWith("_objects", StringComparison.OrdinalIgnoreCase) ||
+                baseName.EndsWith("_devices", StringComparison.OrdinalIgnoreCase);
+        }
+
         private void UpdatePathFromMode()
         {
             if (string.IsNullOrEmpty(chBaseDirectoryPath))
@@ -49,9 +56,14 @@ namespace EasyEPlanner
 
             if (oldChBaseBut.Checked)
             {
+                pathTextBoxLabel.Text = splitDatabasesYesBut.Checked
+                    ? "Выберите файл _objects или _devices:"
+                    : "Укажите путь к базе каналов:";
+                string splitSuffix = splitDatabasesYesBut.Checked ? "_objects" : string.Empty;
                 path = string.IsNullOrEmpty(projectName)
                     ? chBaseDirectoryPath
-                    : Path.Combine(chBaseDirectoryPath, $"{projectName}{chBaseFormat}");
+                    : Path.Combine(chBaseDirectoryPath,
+                        $"{projectName}{splitSuffix}{chBaseFormat}");
             }
             else
             {
@@ -129,13 +141,9 @@ namespace EasyEPlanner
         {
             if (oldChBaseBut.Checked)
             {
-                if (splitDatabasesYesBut.Checked)
-                {
-                    newChBaseBut.Checked = true;
-                    return;
-                }
-
-                pathTextBoxLabel.Text = "Укажите путь к базе каналов:";
+                pathTextBoxLabel.Text = splitDatabasesYesBut.Checked
+                    ? "Выберите файл _objects или _devices:"
+                    : "Укажите путь к базе каналов:";
                 newChBaseBut.Checked = false;
                 UpdatePathFromMode();
             }
@@ -163,6 +171,11 @@ namespace EasyEPlanner
         {
             if (splitDatabasesNoBut.Checked)
             {
+                if (oldChBaseBut.Checked)
+                {
+                    UpdatePathFromMode();
+                }
+
                 await UpdateExportAnalysisAsync();
             }
         }
@@ -173,7 +186,15 @@ namespace EasyEPlanner
             {
                 if (oldChBaseBut.Checked)
                 {
-                    newChBaseBut.Checked = true;
+                    bool selectedSplitFile = IsSplitBaseFilePath(path);
+                    if (!selectedSplitFile)
+                    {
+                        UpdatePathFromMode();
+                    }
+                    else
+                    {
+                        pathTextBoxLabel.Text = "Выберите файл _objects или _devices:";
+                    }
                 }
 
                 await UpdateExportAnalysisAsync();
@@ -297,14 +318,23 @@ namespace EasyEPlanner
             {
                 "Лимиты:"
             };
+            string objectsFileName = $"{projectName}_objects";
+            string devicesFileName = $"{projectName}_devices";
+            if (oldChBaseBut.Checked && IsSplitBaseFilePath(path))
+            {
+                ChannelBaseSplitPathResolver.Resolve(path, false,
+                    out string objectsPath, out string devicesPath);
+                objectsFileName = Path.GetFileNameWithoutExtension(objectsPath);
+                devicesFileName = Path.GetFileNameWithoutExtension(devicesPath);
+            }
 
             if (splitDatabasesYesBut.Checked)
             {
                 foreach (var baseStatistics in currentAnalysis.Bases)
                 {
                     string baseFileName = baseStatistics.BaseName == "Устройства"
-                        ? $"{projectName}_devices"
-                        : $"{projectName}_objects";
+                        ? devicesFileName
+                        : objectsFileName;
                     lines.Add($"  * {baseStatistics.BaseName} [{baseFileName}]:");
                     lines.Add($"    - Подтипы: {baseStatistics.SubtypeCount}/{XmlReporter.MaximumSubtypeCount};");
                     lines.Add($"    - Каналы: {baseStatistics.TotalChannelCount} (max. " +
@@ -407,11 +437,38 @@ namespace EasyEPlanner
                     return false;
                 }
 
-                if (!path.Contains(chBaseFormat))
+                if (!string.Equals(Path.GetExtension(path), chBaseFormat,
+                    StringComparison.OrdinalIgnoreCase))
                 {
                     MessageBox.Show("Указан неправильный файл базы каналов.",
                         "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return false;
+                }
+
+                if (splitDatabasesYesBut.Checked)
+                {
+                    string objectsPath;
+                    string devicesPath;
+                    try
+                    {
+                        ChannelBaseSplitPathResolver.Resolve(path, false,
+                            out objectsPath, out devicesPath);
+                    }
+                    catch (ArgumentException)
+                    {
+                        MessageBox.Show("Выберите существующую базу с суффиксом " +
+                            "_objects или _devices.", "Ошибка", MessageBoxButtons.OK,
+                            MessageBoxIcon.Error);
+                        return false;
+                    }
+
+                    if (!File.Exists(objectsPath) || !File.Exists(devicesPath))
+                    {
+                        MessageBox.Show("Не найдена вторая база разделённой пары " +
+                            "(_objects / _devices).", "Ошибка", MessageBoxButtons.OK,
+                            MessageBoxIcon.Error);
+                        return false;
+                    }
                 }
             }
 

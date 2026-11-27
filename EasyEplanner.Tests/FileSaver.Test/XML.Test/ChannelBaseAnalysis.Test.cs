@@ -4,6 +4,7 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Threading;
 
 namespace EasyEplannerTests.FileSaverTest.XMLTest
@@ -127,6 +128,46 @@ namespace EasyEplannerTests.FileSaverTest.XMLTest
         {
             Assert.Throws<ArgumentNullException>(() =>
                 ChannelBaseAnalysisRunner.Run<int>(null));
+        }
+
+        [Test]
+        public void SplitPathResolver_ResolvesBothFilesFromEitherExistingBase()
+        {
+            string directory = Path.Combine(Path.GetTempPath(), "ChannelBase");
+            string objectsPath;
+            string devicesPath;
+
+            ChannelBaseSplitPathResolver.Resolve(
+                Path.Combine(directory, "Project_devices.cdbx"), false,
+                out objectsPath, out devicesPath);
+
+            Assert.AreEqual(Path.Combine(directory, "Project_objects.cdbx"), objectsPath);
+            Assert.AreEqual(Path.Combine(directory, "Project_devices.cdbx"), devicesPath);
+
+            ChannelBaseSplitPathResolver.Resolve(objectsPath, false,
+                out string objectsFromObjectsPath, out string devicesFromObjectsPath);
+            Assert.AreEqual(objectsPath, objectsFromObjectsPath);
+            Assert.AreEqual(devicesPath, devicesFromObjectsPath);
+        }
+
+        [Test]
+        public void SplitPathResolver_CreatesPairFromNewBasePath()
+        {
+            string directory = Path.Combine(Path.GetTempPath(), "ChannelBase");
+            ChannelBaseSplitPathResolver.Resolve(
+                Path.Combine(directory, "Project.cdbx"), true,
+                out string objectsPath, out string devicesPath);
+
+            Assert.AreEqual(Path.Combine(directory, "Project_objects.cdbx"), objectsPath);
+            Assert.AreEqual(Path.Combine(directory, "Project_devices.cdbx"), devicesPath);
+        }
+
+        [Test]
+        public void SplitPathResolver_RejectsUnsplitExistingBase()
+        {
+            Assert.Throws<ArgumentException>(() =>
+                ChannelBaseSplitPathResolver.Resolve("Project.cdbx", false,
+                    out _, out _));
         }
 
         [Test]

@@ -99,6 +99,44 @@ namespace EasyEPlanner
         }
     }
 
+    public static class ChannelBaseSplitPathResolver
+    {
+        public static void Resolve(string path, bool createNewPair,
+            out string objectsPath, out string devicesPath)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                throw new ArgumentException("A base file path is required.", nameof(path));
+            }
+
+            string directory = Path.GetDirectoryName(path) ?? string.Empty;
+            string fileName = Path.GetFileNameWithoutExtension(path);
+            string extension = Path.GetExtension(path);
+            string baseName;
+
+            if (createNewPair)
+            {
+                baseName = fileName;
+            }
+            else if (fileName.EndsWith("_objects", StringComparison.OrdinalIgnoreCase))
+            {
+                baseName = fileName.Substring(0, fileName.Length - "_objects".Length);
+            }
+            else if (fileName.EndsWith("_devices", StringComparison.OrdinalIgnoreCase))
+            {
+                baseName = fileName.Substring(0, fileName.Length - "_devices".Length);
+            }
+            else
+            {
+                throw new ArgumentException(
+                    "Select an existing *_objects.cdbx or *_devices.cdbx file.", nameof(path));
+            }
+
+            objectsPath = Path.Combine(directory, $"{baseName}_objects{extension}");
+            devicesPath = Path.Combine(directory, $"{baseName}_devices{extension}");
+        }
+    }
+
     [ExcludeFromCodeCoverage]
     public class XmlReporter
     {
@@ -219,11 +257,17 @@ namespace EasyEPlanner
                 var devicesRoot = new Driver(deviceManager);
                 deviceManager.GetObjectForXML(devicesRoot);
 
-                string directory = Path.GetDirectoryName(path);
-                string fileName = Path.GetFileNameWithoutExtension(path);
-                string extension = Path.GetExtension(path);
-                SaveAsXMLCore(Path.Combine(directory, $"{fileName}_objects{extension}"), true, techObjectsRoot, 1);
-                SaveAsXMLCore(Path.Combine(directory, $"{fileName}_devices{extension}"), true, devicesRoot, 2);
+                ChannelBaseSplitPathResolver.Resolve(path, rewrite,
+                    out string objectsPath, out string devicesPath);
+
+                if (!rewrite && (!File.Exists(objectsPath) || !File.Exists(devicesPath)))
+                {
+                    throw new FileNotFoundException(
+                        "Both existing split channel bases (_objects and _devices) are required.");
+                }
+
+                SaveAsXMLCore(objectsPath, rewrite, techObjectsRoot, 1);
+                SaveAsXMLCore(devicesPath, rewrite, devicesRoot, 2);
                 return;
             }
 
