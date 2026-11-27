@@ -743,7 +743,7 @@ namespace EasyEPlanner
                 var techObjectsRoot = new Driver(deviceManager);
                 techObjectManager.GetObjectForXML(techObjectsRoot, combineTags, false);
                 statistics.Add(new ChannelBaseSubtypeStatistics(
-                    "Технологические объекты", techObjectsRoot.Subtypes));
+                    "Объекты", techObjectsRoot.Subtypes));
 
                 var devicesRoot = new Driver(deviceManager);
                 deviceManager.GetObjectForXML(devicesRoot);
