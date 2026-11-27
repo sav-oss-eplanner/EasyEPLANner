@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -15,9 +16,132 @@ using TechObject;
 
 namespace EasyEPlanner
 {
+    public sealed class ChannelBaseSubtypeStatistics
+    {
+        public ChannelBaseSubtypeStatistics(string baseName, List<ISubtype> subtypes)
+        {
+            BaseName = baseName;
+            SubtypeCount = subtypes.Count;
+            TotalChannelCount = subtypes.Sum(subtype => subtype.Channels.Count);
+            var largestSubtype = subtypes
+                .OrderByDescending(subtype => subtype.Channels.Count)
+                .FirstOrDefault();
+            MaxChannelsPerSubtype = largestSubtype?.Channels.Count ?? 0;
+            MaxChannelsSubtypeName = largestSubtype?.Description ?? string.Empty;
+        }
+
+        public string BaseName { get; }
+        public int SubtypeCount { get; }
+        public int TotalChannelCount { get; }
+        public int MaxChannelsPerSubtype { get; }
+        public string MaxChannelsSubtypeName { get; }
+    }
+
+    public sealed class ChannelBaseExportAnalysis
+    {
+        public ChannelBaseExportAnalysis(List<ChannelBaseSubtypeStatistics> bases)
+        {
+            Bases = bases;
+            ExceedsSubtypeLimit = bases.Any(item => item.SubtypeCount > XmlReporter.MaximumSubtypeCount);
+            ExceedsChannelLimit = bases.Any(item => item.MaxChannelsPerSubtype > XmlReporter.MaximumChannelCountPerSubtype);
+        }
+
+        public IReadOnlyList<ChannelBaseSubtypeStatistics> Bases { get; }
+        public bool ExceedsSubtypeLimit { get; }
+        public bool ExceedsChannelLimit { get; }
+        public bool IsWithinLimits => !ExceedsSubtypeLimit && !ExceedsChannelLimit;
+    }
+
+    public static class ChannelBaseAnalysisRunner
+    {
+        public static T Run<T>(Func<T> analysis)
+        {
+            if (analysis == null)
+            {
+                throw new ArgumentNullException(nameof(analysis));
+            }
+
+            var previousCulture = Thread.CurrentThread.CurrentCulture;
+            try
+            {
+                Thread.CurrentThread.CurrentCulture =
+                    StaticHelper.CommonConst.CultureWithDotInsteadComma;
+                return analysis();
+            }
+            finally
+            {
+                Thread.CurrentThread.CurrentCulture = previousCulture;
+            }
+        }
+    }
+
+    public static class ChannelBaseIdGenerator
+    {
+        public static long Generate(int driverId, int subtypeId, int channelId)
+        {
+            if (driverId < 0 || driverId > byte.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(nameof(driverId));
+            }
+
+            if (subtypeId < 0 || subtypeId > byte.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(nameof(subtypeId));
+            }
+
+            if (channelId < 0 || channelId > ushort.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(nameof(channelId));
+            }
+
+            string hexId = $"{driverId:X2}{subtypeId:X2}{channelId:X4}";
+            return long.Parse(hexId, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+        }
+    }
+
+    public static class ChannelBaseSplitPathResolver
+    {
+        public static void Resolve(string path, bool createNewPair,
+            out string objectsPath, out string devicesPath)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                throw new ArgumentException("A base file path is required.", nameof(path));
+            }
+
+            string directory = Path.GetDirectoryName(path) ?? string.Empty;
+            string fileName = Path.GetFileNameWithoutExtension(path);
+            string extension = Path.GetExtension(path);
+            string baseName;
+
+            if (createNewPair)
+            {
+                baseName = fileName;
+            }
+            else if (fileName.EndsWith("_objects", StringComparison.OrdinalIgnoreCase))
+            {
+                baseName = fileName.Substring(0, fileName.Length - "_objects".Length);
+            }
+            else if (fileName.EndsWith("_devices", StringComparison.OrdinalIgnoreCase))
+            {
+                baseName = fileName.Substring(0, fileName.Length - "_devices".Length);
+            }
+            else
+            {
+                throw new ArgumentException(
+                    "Select an existing *_objects.cdbx or *_devices.cdbx file.", nameof(path));
+            }
+
+            objectsPath = Path.Combine(directory, $"{baseName}_objects{extension}");
+            devicesPath = Path.Combine(directory, $"{baseName}_devices{extension}");
+        }
+    }
+
     [ExcludeFromCodeCoverage]
     public class XmlReporter
     {
+        public const int MaximumSubtypeCount = 256;
+        public const int MaximumChannelCountPerSubtype = 65536;
         const string xmlns = "xmlns";
         const string prefixDriver = "driver";
         const string prefixParameters = "parameters";
@@ -36,21 +160,21 @@ namespace EasyEPlanner
         /// Экспорт из проекта базы каналов.
         /// </summary>
         public void SaveAsCDBX(string projectName, bool combineTag = false,
-            bool useNewNames = false, bool rewrite = false)
+            bool useNewNames = false, bool rewrite = false, bool splitDatabases = false)
         {
             Thread t = new Thread(
                 new ParameterizedThreadStart(SaveAsXMLThread));
 
             var dataForSave = new DataForSaveAsXml(projectName, rewrite,
-                combineTag, useNewNames);
+                combineTag, useNewNames, splitDatabases);
             t.CurrentCulture = StaticHelper.CommonConst
                 .CultureWithDotInsteadComma;
             t.Start(dataForSave);
         }
         
-        public void AwaitSaveAsCDBX(string projectName, bool combineTag = false, bool useNewNames = false, bool rewrite = false)
+        public void AwaitSaveAsCDBX(string projectName, bool combineTag = false, bool useNewNames = false, bool rewrite = false, bool splitDatabases = false)
         {
-            SaveAsXML(projectName, rewrite, combineTag, useNewNames);
+            SaveAsXML(projectName, rewrite, combineTag, useNewNames, splitDatabases);
         }
 
 
@@ -71,7 +195,7 @@ namespace EasyEPlanner
             {
                 Logs.SetProgress(1);
                 SaveAsXML(data.pathToFile, data.rewrite, data.cdbxTagView,
-                    data.cdbxNewNames);
+                    data.cdbxNewNames, data.splitDatabases);
                 Logs.SetProgress(50);
                 Logs.AddMessage("Done.");
             }
@@ -95,18 +219,20 @@ namespace EasyEPlanner
         private sealed class DataForSaveAsXml
         {
             public DataForSaveAsXml(string pathToFile, bool rewrite,
-                bool cdbxTagView, bool cdbxNewNames)
+                bool cdbxTagView, bool cdbxNewNames, bool splitDatabases)
             {
                 this.pathToFile = pathToFile;
                 this.rewrite = rewrite;
                 this.cdbxNewNames = cdbxNewNames;
                 this.cdbxTagView = cdbxTagView;
+                this.splitDatabases = splitDatabases;
             }
 
             public string pathToFile;
             public bool rewrite;
             public bool cdbxTagView;
             public bool cdbxNewNames;
+            public bool splitDatabases;
         }
 
         /// <summary>
@@ -117,22 +243,56 @@ namespace EasyEPlanner
         /// <param name="cdbxNewNames">Использовать имена объектов вместо OBJECT
         /// </param>
         /// <param name="cdbxTagView">Сгруппировать тэги в один подтип</param>
-        private void SaveAsXML(string path, bool rewrite = false, 
-            bool cdbxTagView = false, bool cdbxNewNames = false)
+        private void SaveAsXML(string path, bool rewrite = false,
+            bool cdbxTagView = false, bool cdbxNewNames = false,
+            bool splitDatabases = false)
         {
             projectConfig.SynchronizeDevices();
 
-            var root = new Driver(deviceManager);
-            techObjectManager.GetObjectForXML(root, cdbxTagView, cdbxNewNames);
-            deviceManager.GetObjectForXML(root);
+            if (splitDatabases)
+            {
+                var techObjectsRoot = new Driver(deviceManager);
+                techObjectManager.GetObjectForXML(techObjectsRoot, cdbxTagView, cdbxNewNames);
 
+                var devicesRoot = new Driver(deviceManager);
+                deviceManager.GetObjectForXML(devicesRoot);
+
+                ChannelBaseSplitPathResolver.Resolve(path, rewrite,
+                    out string objectsPath, out string devicesPath);
+
+                if (!rewrite && (!File.Exists(objectsPath) || !File.Exists(devicesPath)))
+                {
+                    throw new FileNotFoundException(
+                        "Both existing split channel bases (_objects and _devices) are required.");
+                }
+
+                SaveAsXMLCore(objectsPath, rewrite, techObjectsRoot, 1);
+                SaveAsXMLCore(devicesPath, rewrite, devicesRoot, 2);
+                return;
+            }
+
+            var root = CreateCombinedRoot(cdbxTagView, cdbxNewNames);
+            SaveAsXMLCore(path, rewrite, root);
+        }
+
+        private IDriver CreateCombinedRoot(bool combineTags, bool useNewNames)
+        {
+            var root = new Driver(deviceManager);
+            techObjectManager.GetObjectForXML(root, combineTags, useNewNames);
+            deviceManager.GetObjectForXML(root);
+            return root;
+        }
+
+        private void SaveAsXMLCore(string path, bool rewrite, IDriver root,
+            int driverId = 1)
+        {
             var xmlDoc = new XmlDocument();
             if (!File.Exists(path) || rewrite)
             { // Create new chbase
                 if (rewrite && File.Exists(path))
                     File.Delete(path);
 
-                CreateNewChannelBase(path, xmlDoc, root);
+                CreateNewChannelBase(path, xmlDoc, root, driverId);
             }
             else
             {
@@ -173,7 +333,8 @@ namespace EasyEPlanner
         /// <param name="path">Путь к месту хранения</param>
         /// <param name="xmlDoc">XML-документ, куда писать</param>
         /// <param name="rootNode">Узел с данными</param>
-        private void CreateNewChannelBase(string path, XmlDocument xmlDoc, IDriver root)
+        private void CreateNewChannelBase(string path, XmlDocument xmlDoc,
+            IDriver root, int driverId)
         {
             var textWritter = new XmlTextWriter(path,
                 EncodingDetector.UTF8Bom);
@@ -184,20 +345,20 @@ namespace EasyEPlanner
             textWritter.Close();
             xmlDoc.Load(path);
 
-            XmlElement subtypesNode = WriteCommonXMLPart(xmlDoc);
-            CreateNewChannels(xmlDoc, subtypesNode, root.Subtypes);
+            XmlElement subtypesNode = WriteCommonXMLPart(xmlDoc, driverId);
+            CreateNewChannels(xmlDoc, subtypesNode, root.Subtypes, driverId);
         }
 
         /// <summary>
         /// Формирование общей структуры базы каналов
         /// </summary>
-        private XmlElement WriteCommonXMLPart(XmlDocument xmlDoc)
+        private XmlElement WriteCommonXMLPart(XmlDocument xmlDoc, int driverId)
         {
             xmlDoc.DocumentElement.AddElement(prefixDriver, "inf", nsDriver, "BASE F11F3DCC-09F8-4D04-BCB7-81D5D7C48C78");
             xmlDoc.DocumentElement.AddElement(prefixDriver, "dbbuild", nsDriver, "4");
             var driverXml = xmlDoc.DocumentElement.AddElement(prefixDriver, prefixDriver, nsDriver);
 
-            driverXml.AddElement(prefixDriver, "id", nsDriver, "1");
+            driverXml.AddElement(prefixDriver, "id", nsDriver, driverId.ToString());
             driverXml.AddElement(prefixDriver, "tid", nsDriver, "0");
             driverXml.AddElement(prefixDriver, "dllname", nsDriver, "PAC_easy_drv_LZ.dll");
             driverXml.AddElement(prefixDriver, "access", nsDriver, "2");
@@ -268,7 +429,8 @@ namespace EasyEPlanner
         /// <summary>
         /// Создание узлов и каналов в новой пустой базе каналов
         /// </summary>
-        private void CreateNewChannels(XmlDocument xmlDoc, XmlElement subtypesNode, List<ISubtype> subtypes)
+        private void CreateNewChannels(XmlDocument xmlDoc, XmlElement subtypesNode,
+            List<ISubtype> subtypes, int driverId)
         {
             foreach (var i in Enumerable.Range(0, subtypes.Count))
             {
@@ -276,7 +438,7 @@ namespace EasyEPlanner
 
                 foreach (var j in Enumerable.Range(0, subtypes[i].Channels.Count))
                 {
-                    long channelId = long.Parse($"01{i:X2}{j:X4}", System.Globalization.NumberStyles.HexNumber);
+                    long channelId = ChannelBaseIdGenerator.Generate(driverId, i, j);
                     AddChannel(xmlDoc, subtypes[i].Channels[j], subtypeElm, channelId);
                 }
             }
@@ -288,7 +450,7 @@ namespace EasyEPlanner
         /// <returns></returns>
         private static List<string> GenerateSubTypesIdsList()
         {
-            const int maxNodesCount = 256;
+            const int maxNodesCount = MaximumSubtypeCount;
             var list = new List<string>();
             for (int i = 0; i < maxNodesCount; i++)
             {
@@ -526,7 +688,7 @@ namespace EasyEPlanner
         /// <param name="beginId">Начальный индекс</param>
         private static List<long> FindFreeChannel(XmlElement channelsElm, long beginId)
         {
-            const int maxTagsCount = 65535;
+            const int maxTagsCount = MaximumChannelCountPerSubtype;
             var res = new List<long>();
 
             for (int i = 0; i < maxTagsCount; i++)
@@ -611,6 +773,36 @@ namespace EasyEPlanner
         }
 
         private const string DefaultNodeName = "OBJECT";
+
+        /// <summary>
+        /// Получить предварительную статистику экспорта для выбранных настроек.
+        /// </summary>
+        public ChannelBaseExportAnalysis AnalyzeExport(bool combineTags, bool splitDatabases)
+        {
+            projectConfig.SynchronizeDevices();
+            var statistics = new List<ChannelBaseSubtypeStatistics>();
+
+            if (splitDatabases)
+            {
+                var techObjectsRoot = new Driver(deviceManager);
+                techObjectManager.GetObjectForXML(techObjectsRoot, combineTags, false);
+                statistics.Add(new ChannelBaseSubtypeStatistics(
+                    "Объекты", techObjectsRoot.Subtypes));
+
+                var devicesRoot = new Driver(deviceManager);
+                deviceManager.GetObjectForXML(devicesRoot);
+                statistics.Add(new ChannelBaseSubtypeStatistics("Устройства", devicesRoot.Subtypes));
+            }
+            else
+            {
+                var root = new Driver(deviceManager);
+                techObjectManager.GetObjectForXML(root, combineTags, false);
+                deviceManager.GetObjectForXML(root);
+                statistics.Add(new ChannelBaseSubtypeStatistics("Общая база", root.Subtypes));
+            }
+
+            return new ChannelBaseExportAnalysis(statistics);
+        }
 
         /// <summary>
         /// Получить количество тегов проекта.
