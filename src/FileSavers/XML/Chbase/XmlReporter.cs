@@ -222,8 +222,8 @@ namespace EasyEPlanner
                 string directory = Path.GetDirectoryName(path);
                 string fileName = Path.GetFileNameWithoutExtension(path);
                 string extension = Path.GetExtension(path);
-                SaveAsXMLCore(Path.Combine(directory, $"{fileName}_TechObjectsAndSystem{extension}"), true, techObjectsRoot, 1);
-                SaveAsXMLCore(Path.Combine(directory, $"{fileName}_Devices{extension}"), true, devicesRoot, 2);
+                SaveAsXMLCore(Path.Combine(directory, $"{fileName}_objects{extension}"), true, techObjectsRoot, 1);
+                SaveAsXMLCore(Path.Combine(directory, $"{fileName}_devices{extension}"), true, devicesRoot, 2);
                 return;
             }
 

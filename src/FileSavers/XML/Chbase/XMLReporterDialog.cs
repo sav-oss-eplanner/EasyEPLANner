@@ -303,8 +303,8 @@ namespace EasyEPlanner
                 foreach (var baseStatistics in currentAnalysis.Bases)
                 {
                     string baseFileName = baseStatistics.BaseName == "Устройства"
-                        ? $"{projectName}_Devices"
-                        : $"{projectName}_TechObjectsAndSystem";
+                        ? $"{projectName}_devices"
+                        : $"{projectName}_objects";
                     lines.Add($"  * {baseStatistics.BaseName} [{baseFileName}]:");
                     lines.Add($"    - Подтипы: {baseStatistics.SubtypeCount}/{XmlReporter.MaximumSubtypeCount};");
                     lines.Add($"    - Каналы: {baseStatistics.TotalChannelCount} (max. " +
