@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -213,7 +212,8 @@ namespace EasyEPlanner
                 bool combineTags = combineTagBut.Checked;
                 bool splitDatabases = splitDatabasesYesBut.Checked;
                 var analysis = await Task.Run(() =>
-                    AnalyzeExport(reporter, combineTags, splitDatabases));
+                    ChannelBaseAnalysisRunner.Run(() =>
+                        reporter.AnalyzeExport(combineTags, splitDatabases)));
 
                 if (IsDisposed || Disposing)
                 {
@@ -228,7 +228,8 @@ namespace EasyEPlanner
                     isApplyingDefaultSettings = false;
                     combineTags = true;
                     analysis = await Task.Run(() =>
-                        AnalyzeExport(reporter, combineTags, splitDatabases));
+                        ChannelBaseAnalysisRunner.Run(() =>
+                        reporter.AnalyzeExport(combineTags, splitDatabases)));
                 }
 
                 if (IsDisposed || Disposing)
@@ -244,7 +245,8 @@ namespace EasyEPlanner
                     isApplyingDefaultSettings = false;
                     splitDatabases = true;
                     analysis = await Task.Run(() =>
-                        AnalyzeExport(reporter, combineTags, splitDatabases));
+                        ChannelBaseAnalysisRunner.Run(() =>
+                        reporter.AnalyzeExport(combineTags, splitDatabases)));
                 }
 
                 if (IsDisposed || Disposing)
@@ -272,22 +274,6 @@ namespace EasyEPlanner
                     SetAnalysisInProgress(false);
                     ExportBut.Visible = true;
                 }
-            }
-        }
-
-        private static ChannelBaseExportAnalysis AnalyzeExport(XmlReporter reporter,
-            bool combineTags, bool splitDatabases)
-        {
-            var previousCulture = Thread.CurrentThread.CurrentCulture;
-            try
-            {
-                Thread.CurrentThread.CurrentCulture =
-                    StaticHelper.CommonConst.CultureWithDotInsteadComma;
-                return reporter.AnalyzeExport(combineTags, splitDatabases);
-            }
-            finally
-            {
-                Thread.CurrentThread.CurrentCulture = previousCulture;
             }
         }
 

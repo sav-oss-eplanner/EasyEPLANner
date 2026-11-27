@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -17,7 +18,7 @@ namespace EasyEPlanner
 {
     public sealed class ChannelBaseSubtypeStatistics
     {
-        internal ChannelBaseSubtypeStatistics(string baseName, List<ISubtype> subtypes)
+        public ChannelBaseSubtypeStatistics(string baseName, List<ISubtype> subtypes)
         {
             BaseName = baseName;
             SubtypeCount = subtypes.Count;
@@ -38,7 +39,7 @@ namespace EasyEPlanner
 
     public sealed class ChannelBaseExportAnalysis
     {
-        internal ChannelBaseExportAnalysis(List<ChannelBaseSubtypeStatistics> bases)
+        public ChannelBaseExportAnalysis(List<ChannelBaseSubtypeStatistics> bases)
         {
             Bases = bases;
             ExceedsSubtypeLimit = bases.Any(item => item.SubtypeCount > XmlReporter.MaximumSubtypeCount);
@@ -49,6 +50,53 @@ namespace EasyEPlanner
         public bool ExceedsSubtypeLimit { get; }
         public bool ExceedsChannelLimit { get; }
         public bool IsWithinLimits => !ExceedsSubtypeLimit && !ExceedsChannelLimit;
+    }
+
+    public static class ChannelBaseAnalysisRunner
+    {
+        public static T Run<T>(Func<T> analysis)
+        {
+            if (analysis == null)
+            {
+                throw new ArgumentNullException(nameof(analysis));
+            }
+
+            var previousCulture = Thread.CurrentThread.CurrentCulture;
+            try
+            {
+                Thread.CurrentThread.CurrentCulture =
+                    StaticHelper.CommonConst.CultureWithDotInsteadComma;
+                return analysis();
+            }
+            finally
+            {
+                Thread.CurrentThread.CurrentCulture = previousCulture;
+            }
+        }
+    }
+
+    public static class ChannelBaseIdGenerator
+    {
+        public static long Generate(int driverId, int subtypeId, int channelId)
+        {
+            if (driverId < 0 || driverId > byte.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(nameof(driverId));
+            }
+
+            if (subtypeId < 0 || subtypeId > byte.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(nameof(subtypeId));
+            }
+
+            if (channelId < 0 || channelId > ushort.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(nameof(channelId));
+            }
+
+            string hexId = $"{driverId:X2}{subtypeId:X2}{channelId:X4}";
+            return long.Parse(hexId, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+        }
     }
 
     [ExcludeFromCodeCoverage]
@@ -346,7 +394,7 @@ namespace EasyEPlanner
 
                 foreach (var j in Enumerable.Range(0, subtypes[i].Channels.Count))
                 {
-                    long channelId = long.Parse($"{driverId:X2}{i:X2}{j:X4}", System.Globalization.NumberStyles.HexNumber);
+                    long channelId = ChannelBaseIdGenerator.Generate(driverId, i, j);
                     AddChannel(xmlDoc, subtypes[i].Channels[j], subtypeElm, channelId);
                 }
             }
