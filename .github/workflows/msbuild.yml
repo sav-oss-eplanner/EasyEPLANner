@@ -202,7 +202,7 @@ jobs:
       pull-requests: write
 
     steps:
-    - name: Create or update PR build comment
+    - name: Replace PR build comment
       shell: pwsh
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -239,20 +239,20 @@ jobs:
           $page++
         } while ($pageComments.Count -eq 100)
 
-        $existingComment = $comments |
-          Where-Object { $_.user.login -eq 'github-actions[bot]' -and $_.body.Contains($marker) } |
-          Select-Object -First 1
+        $existingComments = @(
+          $comments |
+            Where-Object { $_.user.login -eq 'github-actions[bot]' -and $_.body.Contains($marker) }
+        )
+        foreach ($comment in $existingComments) {
+          Invoke-RestMethod -Method Delete `
+            -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/issues/comments/$($comment.id)" `
+            -Headers $headers | Out-Null
+        }
+
         $payload = @{ body = $body } | ConvertTo-Json
-        if ($existingComment) {
-          Invoke-RestMethod -Method Patch `
-            -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/issues/comments/$($existingComment.id)" `
-            -Headers $headers -ContentType 'application/json' -Body $payload | Out-Null
-        }
-        else {
-          Invoke-RestMethod -Method Post `
-            -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/issues/$env:PR_NUMBER/comments" `
-            -Headers $headers -ContentType 'application/json' -Body $payload | Out-Null
-        }
+        Invoke-RestMethod -Method Post `
+          -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/issues/$env:PR_NUMBER/comments" `
+          -Headers $headers -ContentType 'application/json' -Body $payload | Out-Null
 
   # --------------------
   # Release on tags
