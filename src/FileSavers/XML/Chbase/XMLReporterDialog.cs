@@ -141,33 +141,33 @@ namespace EasyEPlanner
             }
         }
 
-        private void NonCombineTagBut_CheckedChanged(object sender, EventArgs e)
+        private async void NonCombineTagBut_CheckedChanged(object sender, EventArgs e)
         {
             if (nonCombineTagBut.Checked)
             {
                 combineTagBut.Checked = false;
-                UpdateExportAnalysis();
+                await UpdateExportAnalysisAsync();
             }
         }
 
-        private void combineTagBut_CheckedChanged(object sender, EventArgs e)
+        private async void combineTagBut_CheckedChanged(object sender, EventArgs e)
         {
             if (combineTagBut.Checked)
             {
                 nonCombineTagBut.Checked = false;
-                UpdateExportAnalysis();
+                await UpdateExportAnalysisAsync();
             }
         }
 
-        private void splitDatabasesNoBut_CheckedChanged(object sender, EventArgs e)
+        private async void splitDatabasesNoBut_CheckedChanged(object sender, EventArgs e)
         {
             if (splitDatabasesNoBut.Checked)
             {
-                UpdateExportAnalysis();
+                await UpdateExportAnalysisAsync();
             }
         }
 
-        private void splitDatabasesYesBut_CheckedChanged(object sender, EventArgs e)
+        private async void splitDatabasesYesBut_CheckedChanged(object sender, EventArgs e)
         {
             if (splitDatabasesYesBut.Checked)
             {
@@ -176,7 +176,7 @@ namespace EasyEPlanner
                     newChBaseBut.Checked = true;
                 }
 
-                UpdateExportAnalysis();
+                await UpdateExportAnalysisAsync();
             }
         }
 
@@ -185,14 +185,14 @@ namespace EasyEPlanner
             await RefreshExportAnalysisAsync(true);
         }
 
-        private async void UpdateExportAnalysis()
+        private Task UpdateExportAnalysisAsync()
         {
             if (isApplyingDefaultSettings || analysisRunning || IsDisposed)
             {
-                return;
+                return Task.CompletedTask;
             }
 
-            await RefreshExportAnalysisAsync(false);
+            return RefreshExportAnalysisAsync(false);
         }
 
         private async Task RefreshExportAnalysisAsync(bool chooseDefaults)
